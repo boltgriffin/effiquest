@@ -1,0 +1,257 @@
+@import 'tailwindcss';
+
+/*
+ * EffiQuest design tokens - see docs/DESIGN_SYSTEM.md.
+ * Theme: light by default; dark follows the OS unless the user picks one (html[data-theme]).
+ * The dark block is intentionally duplicated (OS preference + explicit choice) instead of using
+ * light-dark(), which older Android WebViews in schools may not support.
+ */
+:root {
+  /* Surfaces: warm "lab notebook" paper */
+  --bg: #f4f2ec;
+  --surface: #fbfaf6;
+  --surface-2: #ece9e0;
+  --ink: #1b1f1e;
+  --muted: #565c59;
+  --rule: #d9d4c7;
+  --rule-strong: #857e70;
+  --brand: #0b6e66;
+  --brand-ink: #ffffff;
+  --brand-soft: #dcebe7;
+  /* Physics encoding: identical meaning in diagrams, readouts and charts */
+  --input: #2453b8;
+  --output: #96460a;
+  --loss: #b4123a;
+  /* Status (always paired with an icon + text) */
+  --success: #17703a;
+  --warning: #8a5a00;
+  --danger: #b42318;
+  /* Chart series (validated with the dataviz palette checks) */
+  --chart-1: #6f5cc4;
+  --chart-2: #00897b;
+  --overlay: rgb(20 24 23 / 0.45);
+  --shadow-color: 30 28 20;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0e1413;
+    --surface: #151d1c;
+    --surface-2: #1d2827;
+    --ink: #e6ebe8;
+    --muted: #a0aca8;
+    --rule: #2b3836;
+    --rule-strong: #667a76;
+    --brand: #4fd1c0;
+    --brand-ink: #04201d;
+    --brand-soft: #173a36;
+    --input: #8fb0ff;
+    --output: #f2aa55;
+    --loss: #ff8098;
+    --success: #5fd68a;
+    --warning: #f5c84c;
+    --danger: #ff8a80;
+    --chart-1: #8a7ae6;
+    --chart-2: #16a090;
+    --overlay: rgb(0 0 0 / 0.6);
+    --shadow-color: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0e1413;
+  --surface: #151d1c;
+  --surface-2: #1d2827;
+  --ink: #e6ebe8;
+  --muted: #a0aca8;
+  --rule: #2b3836;
+  --rule-strong: #667a76;
+  --brand: #4fd1c0;
+  --brand-ink: #04201d;
+  --brand-soft: #173a36;
+  --input: #8fb0ff;
+  --output: #f2aa55;
+  --loss: #ff8098;
+  --success: #5fd68a;
+  --warning: #f5c84c;
+  --danger: #ff8a80;
+  --chart-1: #8a7ae6;
+  --chart-2: #16a090;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow-color: 0 0 0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-input: var(--input);
+  --color-output: var(--output);
+  --color-loss: var(--loss);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+
+  /* Offline-safe system font stacks: no web-font download needed */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-display:
+    'Iowan Old Style', Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Restrained radii: rules and edges over rounded cards */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* Elevation: only overlays float */
+  --shadow-pop: 0 6px 20px -6px rgb(var(--shadow-color) / 0.28);
+  --shadow-dialog: 0 24px 60px -12px rgb(var(--shadow-color) / 0.4);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Scientific numbers: aligned digits everywhere numbers are compared */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Graph paper behind diagrams and the lab viewport only (not page chrome) */
+.paper-grid {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--rule) 55%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--rule) 55%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 24px 24px;
+}
+
+/* Hatch = "lost energy" texture so loss is never color-alone */
+.hatch-loss {
+  background-color: color-mix(in srgb, var(--loss) 22%, var(--surface));
+  background-image: repeating-linear-gradient(135deg, var(--loss) 0 2px, transparent 2px 7px);
+}
+
+/* Range slider */
+input[type='range'].eq-range {
+  appearance: none;
+  width: 100%;
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='range'].eq-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--brand) 0 var(--fill, 0%),
+    var(--rule-strong) var(--fill, 0%) 100%
+  );
+}
+input[type='range'].eq-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule-strong);
+}
+input[type='range'].eq-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+input[type='range'].eq-range::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--brand);
+}
+input[type='range'].eq-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--brand);
+}
+input[type='range'].eq-range:focus-visible {
+  outline: none;
+}
+input[type='range'].eq-range:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--brand-soft),
+    0 0 0 5px var(--brand);
+}
+input[type='range'].eq-range:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 3px var(--brand-soft),
+    0 0 0 5px var(--brand);
+}
+
+dialog.eq-dialog::backdrop {
+  background: var(--overlay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .hatch-loss {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    background-image: repeating-linear-gradient(135deg, CanvasText 0 2px, transparent 2px 7px);
+  }
+}
