@@ -19,7 +19,7 @@ export default defineConfig({
         name: 'EffiQuest 3D - Machine and Efficiency Laboratory',
         short_name: 'EffiQuest 3D',
         description: 'Interactive machine and efficiency laboratory for Grade 11 General Science.',
-        theme_color: '#0f766e',
+        theme_color: '#0b6e66',
         background_color: '#0b1f1d',
         display: 'standalone',
         start_url: '/',
@@ -27,7 +27,12 @@ export default defineConfig({
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          {
+            src: 'icons/icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
       workbox: {

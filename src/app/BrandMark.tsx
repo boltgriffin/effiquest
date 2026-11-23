@@ -1,19 +1,31 @@
-/** EffiQuest mark: a lever on a fulcrum inside a square, drawn in the icon style. */
+import { MARK } from './brandMarkSvg';
+
+/** EffiQuest mark in the brand tokens, so it follows light/dark. Drawing: brandMarkSvg.ts. */
 export function BrandMark({ size = 32 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      <rect width="32" height="32" rx="6" style={{ fill: 'var(--brand)' }} />
+    <svg width={size} height={size} viewBox={MARK.viewBox} aria-hidden="true" focusable="false">
+      <rect
+        width={MARK.size}
+        height={MARK.size}
+        rx={MARK.radius}
+        style={{ fill: 'var(--brand)' }}
+      />
       <g
         style={{ stroke: 'var(--brand-ink)' }}
-        strokeWidth="2.25"
+        strokeWidth={MARK.strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       >
-        <path d="M6 19.5 26 15.5" />
-        <path d="m16 17.5-3.5 7h7z" />
+        <path d={MARK.beam} />
+        <path d={MARK.fulcrum} />
       </g>
-      <circle cx="23.5" cy="12.6" r="2.4" style={{ fill: 'var(--brand-ink)' }} />
+      <circle
+        cx={MARK.load.cx}
+        cy={MARK.load.cy}
+        r={MARK.load.r}
+        style={{ fill: 'var(--brand-ink)' }}
+      />
     </svg>
   );
 }

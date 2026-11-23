@@ -87,57 +87,9 @@ All system fonts: nothing to download, so the app works offline and on slow netw
 
 One hand-drawn family: 24 px grid, 1.75 px stroke, round caps and joins, no fills except small dots. It includes UI icons (home, learn, lab, quest, assess, progress, settings, check, close, chevrons, info, alert, help, play, reset, record, lock, sun, moon, monitor, offline, video, clock, sigma, layers) and **domain glyphs drawn in the same style** (incline, lever, pulley, hydraulic, gauge, target, eye, journal, calculator). No third-party icon library, so domain and UI icons never clash. Icons are decorative (`aria-hidden`) unless given a `label`. Add icons in `glyphs.tsx` only.
 
-The **brand mark** is a lever on a fulcrum with a load, white on teal.
-
-## 4. Components (`src/components`)
-
-| Component | File | Notes |
-|---|---|---|
-| Button, ButtonLink, IconButton | `ui/Button.tsx`, `ui/styles.ts` | Variants: primary, secondary, ghost, danger; sizes md (44 px) / sm. Use `ButtonLink` when the action navigates. `IconButton` requires a label. |
-| TextField, TextArea | `ui/Field.tsx` | Label, unit suffix (announced in the label), hint, error with `role=alert`. Number inputs use mono digits. |
-| Select | `ui/Select.tsx` | Native `<select>` restyled (best on low-end devices and screen readers). |
-| Slider | `ui/Slider.tsx` | Label + serif symbol, live `<output>` value with unit, min/max ticks, `aria-valuetext` with the unit. |
-| Switch | `ui/Switch.tsx` | `role="switch"`, label + description. |
-| SegmentedControl | `ui/SegmentedControl.tsx` | Radio group (arrow keys native). Used for theme. |
-| Tabs | `ui/Tabs.tsx` | WAI-ARIA tabs, underline style, roving focus (←/→/Home/End). Unit-tested. |
-| Dialog | `ui/Dialog.tsx` | Native `<dialog>`: focus containment, Esc, backdrop click, focus return. |
-| Tooltip | `ui/Tooltip.tsx` | Hover and focus, Esc to dismiss, `aria-describedby`. Supplementary only. |
-| ProgressBar, StepIndicator | `ui/Progress.tsx` | `role=progressbar` with value; numbered protocol steps with done/current/todo, `aria-current="step"`, `compact` mode for narrow panels. |
-| Badge, SampleBadge | `ui/Badge.tsx` | Mono uppercase tag. `SampleBadge` (dashed amber) marks every placeholder or sample value. |
-| Callout | `ui/Callout.tsx` | Info/success/warning/danger with icon + left rule. |
-| Panel, PageHeader | `ui/Panel.tsx` | The one container style and the page title block. |
-| Readout | `ui/Readout.tsx` | Scientific measurement: tone tick (input/output/loss), italic symbol with optional definition tooltip, mono value, muted unit; `null` → em dash + "not measured" for screen readers. |
-| EquationCard | `EquationCard.tsx` | Serif italic equation with sub/superscripts parsed from `W_out` / `x^2`, plus units line. |
-| Loading / Empty / Success / Error / NotFound states | `StatePanels.tsx` | Dashed-border block with icon + title + text + optional action. Errors use `role=alert`, success `role=status`. |
-| ErrorBoundary | `ErrorBoundary.tsx` | Area-specific message with retry. |
-| Navigation shell | `app/AppShell.tsx` | See §5. |
-
-Lab-specific (`src/features/lab`): `InclineDiagram` (exact geometry, labeled force arrows, dashed loss arrow, accessible title/desc), `EnergyFlowBar` (useful vs. hatched loss, values labeled), `ExperimentPanel`, `ResultsPanel`.
-Chart (`src/features/progress/PrePostChart.tsx`): grouped horizontal bars, 2 validated series colors, legend always visible, hover tooltip, **Table** tab as the non-visual alternative, no animation.
-
-## 5. Responsive layout
-
-| Width | Navigation | Content |
-|---|---|---|
-| < 768 px (phone) | Top bar (brand, offline icon, settings) + fixed bottom tab bar with 6 icon-and-label tabs, safe-area aware | Single column; side panels stack below. Lab order: apparatus → experiment → results. |
-| 768-1023 px (tablet) | 88 px left rail: icons with short labels, settings and connection dot at the bottom | Single column, wider |
-| ≥ 1024 px (desktop) | 240 px sidebar with brand, labels, settings, connection status | Two-column pages (main + 20-24 rem side column); the lab's experiment panel is sticky |
-
-All page grids use `grid-cols-1` as the base, so long content can never force horizontal scrolling (a bug found and fixed with screenshots during this milestone). Content max width 1280 px. A "Skip to content" link is the first focusable element.
-
-## 6. Accessibility checklist (applies to new work)
-- Text contrast ≥ 4.5:1; control boundaries ≥ 3:1 (values in §2.1).
-- Every control has a visible label; units are part of the accessible name.
-- Status never by color alone (icon + text; hatch/dash for loss).
-- Keyboard: everything reachable and operable; visible focus; Esc closes overlays.
-- Live regions for results and feedback (`aria-live="polite"`, `role=status/alert`).
-- Charts and diagrams have text alternatives (table view, `<title>/<desc>`, `aria-label` summaries).
-- 44 px targets; respects reduced motion; works at 200 % zoom (single-column fallback).
-- Known gap: full non-visual operation of the 3D canvas is out of scope (documented in UI_UX_PLAN §7). The diagram tab is the accessible alternative.
-
-## 7. Rules for adding UI
-1. Reuse a component before writing a new one; if a new one is needed, add it to `components/ui` and to `/design`.
-2. Use tokens only. A new color needs a role in §2.1 and a contrast check.
-3. Physics quantities always use `Readout` (or the same tone/symbol/unit pattern) and the input/output/loss colors.
-4. No control without behavior. If something isn't built yet, disable it and say why in visible text, or don't show it.
-5. Placeholder or sample content always carries a `SampleBadge` or an explicit empty state.
+The **brand mark** is a lever on a fulcrum with a load, drawn in `--brand` / `--brand-ink`: white on teal in light theme, dark on mint in dark theme. One drawing (`src/app/brandMarkSvg.ts`) is used everywhere:
+- the in-app logo (`src/app/BrandMark.tsx`);
+- the **browser tab icon**: `useThemedFavicon` redraws it from the active theme's tokens, so it matches the logo for the system theme and for a theme chosen in Settings;
+- `public/favicon.svg`, shown before the app starts: light colours, switching to the dark colours with a dark system setting. `src/app/BrandMark.test.tsx` fails if it drifts from the shared drawing;
+- the PNG app icons (`public/icons/`: 192, 512, a maskable 512 with the mark inside the safe zone, and a 180 px Apple touch icon), rendered from the favicon in light colours by `npm run icons`. Installed-app icons cannot follow the theme. Run it after changing the mark;
+- the browser `theme-color` and the manifest `theme_color` use the light `--brand` value.
