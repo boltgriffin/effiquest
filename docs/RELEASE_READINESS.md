@@ -107,6 +107,12 @@ Do this on **one low-end Android phone** and **one school PC**:
 - the offline worker is served with no-cache, and the security headers are present;
 - no Supabase project reference appears in any of the 33 JavaScript files.
 
+**Redeployed (2026-11-24):** Milestones 14-16 (commit `1ebfe6b`): screw jack, wedge, realistic 3D, bicycle and hydraulic brake labs. Checked after deploying:
+- the offline worker lists all nine 3D views (including bicycle, brake, screw, wedge);
+- direct links work (`/lab/bicycle`, `/lab/hydraulic-brake`, `/lab/screw`, `/learn/torque`);
+- `sw.js` is served with no-cache; nosniff, Referrer-Policy, X-Frame-Options and HSTS are present;
+- none of the 41 JavaScript files contains a Supabase project reference (the only `supabase.co` text is the client library's generic `*.supabase.co` hostname pattern).
+
 **To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
