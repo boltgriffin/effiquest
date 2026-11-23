@@ -3,8 +3,9 @@ import type { MisconceptionId } from '@/types';
 
 /**
  * Module skeletons. Titles and objectives restate the concept note's specific objectives
- * (SRC-O1..O6). Lesson text and videos are NOT written here: they are to be supplied by the
- * teacher (decision D-10). Equations come from docs/PHYSICS_MODEL_PLAN.md.
+ * (SRC-O1..O6). Draft lesson text lives in content/lessons.ts (decision D-10: drafted by the
+ * developer, approved by the teacher); videos come from the teacher. Equations come from
+ * docs/PHYSICS_MODEL_PLAN.md.
  */
 export interface Equation {
   id: string;

@@ -9,9 +9,12 @@ import { Callout } from '@/components/ui/Callout';
 import { PageHeader, Panel } from '@/components/ui/Panel';
 import { Tabs } from '@/components/ui/Tabs';
 import { getMisconception } from '@/content/misconceptions';
+import { findLesson } from '@/content/lessons';
 import { findModule, modules, type ModuleOutline } from '@/content/modules';
 import { isLessonOpened, isModuleComplete } from '@/content/progress';
 import { quests } from '@/content/quests';
+import { PracticeItem } from '@/features/assessment/PracticeItem';
+import { LessonView } from '@/features/lessons/LessonView';
 import { useProgress } from '@/hooks/useProgress';
 
 export default function ModulePage() {
@@ -26,6 +29,7 @@ function ModuleView({ mod }: { mod: ModuleOutline }) {
   const [saveError, setSaveError] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
   const done = isModuleComplete(progress.events, mod.id);
+  const lesson = findLesson(mod.id);
   const index = modules.findIndex((m) => m.id === mod.id);
   const next = modules[index + 1];
   const relatedQuest = quests.find((q) =>
@@ -70,10 +74,15 @@ function ModuleView({ mod }: { mod: ModuleOutline }) {
               id: 'lesson',
               label: 'Lesson',
               icon: 'learn',
-              content: (
+              content: lesson ? (
+                <LessonView
+                  lesson={lesson}
+                  renderCheck={(item) => <PracticeItem key={item.id} item={item} />}
+                />
+              ) : (
                 <EmptyState icon="learn" title="Lesson in preparation">
-                  The lesson text is being drafted from the concept note's objectives. It will
-                  appear here after the teacher approves it. The key equations are ready now.
+                  The lesson text is being drafted from the concept note's objectives. The key
+                  equations are ready now.
                 </EmptyState>
               ),
             },

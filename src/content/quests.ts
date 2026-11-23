@@ -160,6 +160,14 @@ export const labs: readonly LabInfo[] = [
     question:
       'How does the size of the wheel change the effort, and where does the lost energy go?',
   },
+  {
+    id: 'hydraulic',
+    title: 'Hydraulic press',
+    to: '/lab/hydraulic-press',
+    icon: 'hydraulic',
+    question:
+      'How does a small push on a small piston lift a heavy load, and what do real presses lose?',
+  },
 ];
 
 /**
