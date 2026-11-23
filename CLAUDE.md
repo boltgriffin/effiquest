@@ -23,13 +23,13 @@ Before declaring work done: `typecheck`, `lint`, `test`, `build` must pass.
 src/
   app/          router, AppShell (layout, nav). Nothing imports app/.
   pages/        route-level screens; compose features and components
-  features/     vertical slices: lab/ (incline + lab/pulley/), assessment/, progress/, teacher/; features do not import each other
+  features/     vertical slices: lab/ (shared/ template + machines/ definitions; see docs/SIMPLE_MACHINES_LABS.md), assessment/, progress/, teacher/; features do not import each other
   components/   shared UI: ui/ (design-system components), icons/, StatePanels, ErrorBoundary, EquationCard
   content/      module, quest and misconception data (source-traced; no invented lesson text) +
                 progress.ts (pure derivation of completion from the progress event log)
   edu-calc/     learner-facing calculations with structured, explained results (docs/PHYSICS_CALCULATIONS.md). Pure.
-  physics-core/ deterministic machine models (incline, lever, pulley) + energy ledger. Pure.
-  scene/        R3F scenes (InclineScene, PulleyScene); read motion refs, never compute physics
+  physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle) + energy ledger + shared run shape. Pure.
+  scene/        R3F scenes (incline, pulley, lever, wheel & axle) + SceneLabel; read motion refs, never compute physics
   hooks/ store/ shared hooks; Zustand stores (view preferences only)
   services/     storage/ (IndexedDB via idb). Only place that touches IndexedDB.
   config/       env.ts is the only reader of import.meta.env
@@ -78,5 +78,6 @@ Dependency rules (partly enforced by ESLint `no-restricted-imports`):
 - Milestone discipline: complete one milestone, report, and wait for owner approval before the next.
 - Do not create empty abstractions or folders just to fill a structure.
 - The older Next.js + Laravel prototype in `Desktop\JAVA JDBC CRUD\EffiQuest` is reference only. Do not copy its `.env.local`.
+- New labs: add a `MachineDefinition` in `features/lab/machines/` (own physics module, diagram, 3D view, guide content) and a case in `pages/MachineLabPage.tsx`; do not fork the template.
 - Navigation config lives in `src/app/navigation.ts` (one list for sidebar, rail, tabs, menu). Learner identity = pseudonymous learner code in `store/learnerStore.ts`; teacher mode is a display switch, not security. See `docs/NAVIGATION_AND_DASHBOARDS.md`.
 - Owner decisions are recorded in `docs/DECISIONS.md` (device-only data, no accounts, quest progress only, first machines: incline, lever, pulley, wheel and axle, hydraulic press). Follow them; state any other assumption you rely on.

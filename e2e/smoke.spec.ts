@@ -72,7 +72,6 @@ test.describe('inside the app', () => {
 
   test('lab: slider changes the diagram', async ({ page }) => {
     await page.goto('/lab/incline');
-    await page.getByRole('button', { name: /Set up/ }).click();
     const angle = page.getByRole('slider', { name: /Ramp angle/ });
     await angle.focus();
     await page.keyboard.press('ArrowRight');
@@ -88,13 +87,13 @@ test.describe('inside the app', () => {
     await expect(dialog).toBeHidden();
   });
 
-  test('lab: a journal entry can be saved on the device', async ({ page }) => {
+  test('lab: completing the reflection completes the lab', async ({ page }) => {
     await page.goto('/lab/incline');
-    await page.getByRole('button', { name: /Explain/ }).click();
-    await page.getByLabel('What did you believe before the experiment?').fill('Steeper is worse.');
-    await page.getByLabel('What did your measurements show?').fill('Not what I expected.');
-    await page.getByRole('button', { name: 'Save to journal' }).click();
-    await expect(page.getByText('Lab activity complete')).toBeVisible();
+    await page.getByRole('button', { name: /Reflect/ }).click();
+    const boxes = page.getByRole('textbox');
+    for (let i = 0; i < 3; i++) await boxes.nth(i).fill(`Answer ${i + 1}`);
+    await page.getByRole('button', { name: 'Save and complete the lab' }).click();
+    await expect(page.getByText('Inclined plane lab complete')).toBeVisible();
   });
 
   test('assessment sample run reaches a scored result', async ({ page }) => {

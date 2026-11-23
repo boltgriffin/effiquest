@@ -179,6 +179,13 @@ describe('efficiency', () => {
     expect(perfect.value).toBe(100);
     expect(perfect.warnings[0]).toMatch(/ideal/);
   });
+  it('accepts floating-point rounding at exactly 100 % (simulated perfect machine)', () => {
+    const r = ok(
+      efficiency({ usefulWorkJ: 98.10000000000001, inputWorkJ: 98.1 }, { basis: 'simulated' }),
+    );
+    expect(r.value).toBe(100);
+    expect(r.warnings[0]).toMatch(/ideal/);
+  });
   it('rejects output greater than input instead of reporting more than 100 %', () => {
     expect(fields(efficiency({ usefulWorkJ: 12, inputWorkJ: 10 }))).toEqual(['usefulWorkJ']);
     expect(fields(efficiencyFromMA({ actualMA: 3, idealMA: 2 }))).toEqual(['actualMA']);

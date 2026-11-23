@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { simulatePulleyLift } from '@/physics-core';
 import { DRAWING, pulleyLayout } from './layout';
-import { measurePulley, readingAt } from './measurement';
-import { DEFAULT_PULLEY_PARAMS, PULLEY_GEOMETRY, samePulleyParams, toModel } from './params';
-import { canPause, canReplay, canResume, INITIAL_PLAYBACK, playback } from './playback';
+import { PULLEY_GEOMETRY } from './params';
+import { canPause, canReplay, canResume, INITIAL_PLAYBACK, playback } from '../shared/playback';
 
 describe('playback state machine', () => {
   const started = playback(INITIAL_PLAYBACK, { type: 'START', durationS: 5 });
@@ -86,52 +84,5 @@ describe('drawing scale', () => {
     const lowest =
       DRAWING.effortStartY + 4 * PULLEY_GEOMETRY.liftM * DRAWING.pxPerM + scaleAndArrow;
     expect(lowest).toBeLessThanOrEqual(DRAWING.floorY);
-  });
-});
-
-describe('pulley measurements', () => {
-  const params = { ...DEFAULT_PULLEY_PARAMS, segments: 4 as const };
-  const run = simulatePulleyLift(toModel(params), { loadSpeedMps: 0.2 });
-  const m = measurePulley(params, run);
-
-  it('reads the instruments: load weight, effort, distances', () => {
-    expect(m.loadWeightN).toBe(98.1);
-    expect(m.outputForceN).toBe(98.1);
-    expect(m.outputDistanceM).toBe(PULLEY_GEOMETRY.liftM);
-    expect(m.inputDistanceM).toBe(4);
-  });
-
-  it('VR is ideal and equals the segment count; AMA is lower than VR', () => {
-    expect(m.vr.ok && m.vr.value).toBe(4);
-    expect(m.vr.ok && m.vr.basis).toBe('ideal');
-    expect(m.ama.ok && m.ama.value).toBeLessThan(4);
-  });
-
-  it('efficiency comes from work and agrees with AMA ÷ VR within reading resolution', () => {
-    if (!m.eta.ok || !m.ama.ok || !m.vr.ok || !m.check.valid) throw new Error('invalid');
-    expect(m.eta.basis).toBe('simulated');
-    expect(m.eta.value).toBeCloseTo(m.check.efficiencyPercent, 9);
-    expect(Math.abs((m.ama.value / m.vr.value) * 100 - m.eta.value)).toBeLessThan(0.3);
-  });
-
-  it('losses add up to input − useful work', () => {
-    const lost = m.losses.reduce((a, l) => a + l.joules, 0);
-    expect(lost).toBeCloseTo(m.inputWorkJ - m.outputWorkJ, 9);
-  });
-
-  it('live readings move from start to finish', () => {
-    const start = readingAt(run, 1, 0);
-    const end = readingAt(run, 1, run.durationS);
-    expect(start).toMatchObject({ ropePulledM: 0, loadRiseM: 0, fraction: 0, inputWorkJ: 0 });
-    expect(end.fraction).toBeCloseTo(1, 2);
-    expect(end.inputWorkJ).toBeCloseTo(m.inputWorkJ, 9);
-    const mid = readingAt(run, 1, run.durationS / 2);
-    expect(mid.effortN).toBe(m.inputForceN); // steady part: scale reads the steady effort
-    expect(mid.ropePulledM).toBeCloseTo(4 * mid.loadRiseM, 1);
-  });
-
-  it('compares settings', () => {
-    expect(samePulleyParams(params, { ...params })).toBe(true);
-    expect(samePulleyParams(params, { ...params, segments: 3 })).toBe(false);
   });
 });

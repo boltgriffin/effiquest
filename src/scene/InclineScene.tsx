@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Line, OrbitControls } from '@react-three/drei';
 import { ExtrudeGeometry, Shape, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
+import { SceneLabel } from './SceneLabel';
 import { useUiStore } from '@/store/uiStore';
 
 interface InclineSceneProps {
@@ -84,6 +85,7 @@ export function InclineScene({ angleDeg, lengthM, motion, playing }: InclineScen
         <mesh geometry={geometry}>
           <meshStandardMaterial color={colors.ramp} roughness={0.9} />
         </mesh>
+        <SceneLabel position={[base * 0.75, height * 0.2, DEPTH / 2 + 0.05]}>Ramp</SceneLabel>
         <lineSegments>
           <edgesGeometry args={[geometry]} />
           <lineBasicMaterial color={colors.edge} />
@@ -93,6 +95,8 @@ export function InclineScene({ angleDeg, lengthM, motion, playing }: InclineScen
             <boxGeometry args={[BLOCK.length, BLOCK.height, BLOCK.depth]} />
             <meshStandardMaterial color={colors.block} roughness={0.6} />
           </mesh>
+          <SceneLabel position={[0, BLOCK.height + 0.14, 0]}>Block (load)</SceneLabel>
+          <SceneLabel position={[BLOCK.length / 2 + 0.55, BLOCK.height / 2, 0]}>Effort</SceneLabel>
           {/* Effort rope, pulled up the slope */}
           <Line
             points={[
@@ -106,6 +110,7 @@ export function InclineScene({ angleDeg, lengthM, motion, playing }: InclineScen
       </group>
       <gridHelper args={[6, 12, colors.ground, colors.ground]} position={[0, -0.001, 0]} />
       <OrbitControls
+        makeDefault
         target={[0, height / 2, 0]}
         enablePan={false}
         minDistance={1.5}

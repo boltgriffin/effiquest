@@ -1,9 +1,9 @@
 /** Inclined-plane set-up chosen by the learner (SI units except the angle, in degrees). */
-export interface InclineParams {
+export type InclineParams = {
   angleDeg: number;
   friction: number;
   massKg: number;
-}
+};
 
 export const DEFAULT_PARAMS: InclineParams = { angleDeg: 30, friction: 0.2, massKg: 10 };
 

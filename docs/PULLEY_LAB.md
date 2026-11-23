@@ -1,5 +1,7 @@
 # PULLEY_LAB.md
 
+> Milestone 08 moved this lab onto the shared template (`SIMPLE_MACHINES_LABS.md`): same physics and controls, plus a Calculate step and a knowledge check. The Results sentence now reads "When the number of supporting segments went from 1 to 4, …".
+
 Milestone 07: the complete pulley efficiency laboratory at **`/lab/pulley`**.
 
 Owner decisions (2026-11-23):

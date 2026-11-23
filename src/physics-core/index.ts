@@ -13,6 +13,7 @@ export {
   type LedgerCheck,
 } from './ledger';
 export {
+  inclineMachineRun,
   inclineSteadyState,
   simulateInclinePull,
   validateIncline,
@@ -22,13 +23,30 @@ export {
 } from './incline';
 export {
   DEFAULT_LEVER,
+  simulateLeverTurn,
   solveLever,
   validateLever,
   type LeverParams,
   type LeverResult,
 } from './lever';
 export {
+  DEFAULT_WHEEL_AXLE,
+  simulateWheelAxleLift,
+  solveWheelAxle,
+  validateWheelAxle,
+  type WheelAxleParams,
+  type WheelAxleSteady,
+} from './wheelAxle';
+export {
+  accelAt,
+  trapezoidProfile,
+  type MachineRun,
+  type MachineSample,
+  type Profile,
+} from './run';
+export {
   DEFAULT_PULLEY,
+  pulleyMachineRun,
   simulatePulleyLift,
   solvePulley,
   validatePulley,

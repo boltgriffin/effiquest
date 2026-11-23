@@ -1,5 +1,6 @@
 import { degToRad, G, isNonNegative, isPositive, validation, type Validation } from './constants';
 import type { EnergyLedger } from './ledger';
+import type { MachineRun } from './run';
 
 /**
  * Block pulled up a ramp, parallel to the slope, with kinetic (Coulomb) friction.
@@ -73,6 +74,10 @@ export interface PullSample {
   positionM: number;
   /** Force applied by the learner at this instant (N). */
   forceN: number;
+  /** Work done by the effort so far (J). */
+  inputWorkJ: number;
+  /** Potential energy gained by the block so far (J). */
+  usefulWorkJ: number;
 }
 
 export interface PullResult {
@@ -112,7 +117,9 @@ export function simulateInclinePull(p: InclineModelParams, opts: PullOptions = {
   let v = 0;
   let inputJ = 0;
   let frictionJ = 0;
-  const samples: PullSample[] = [{ tS: 0, positionM: 0, forceN: 0 }];
+  const samples: PullSample[] = [
+    { tS: 0, positionM: 0, forceN: m * G * sin + frictionN, inputWorkJ: 0, usefulWorkJ: 0 },
+  ];
   const sampleEvery = Math.max(1, Math.round(1 / 60 / dt));
 
   for (let step = 0; step < totalSteps; step++) {
@@ -127,11 +134,23 @@ export function simulateInclinePull(p: InclineModelParams, opts: PullOptions = {
     frictionJ += frictionN * vAvg * dt;
     v = vNext;
     if ((step + 1) % sampleEvery === 0) {
-      samples.push({ tS: (step + 1) * dt, positionM: x, forceN });
+      samples.push({
+        tS: (step + 1) * dt,
+        positionM: x,
+        forceN,
+        inputWorkJ: inputJ,
+        usefulWorkJ: m * G * x * sin,
+      });
     }
   }
   const time = totalSteps * dt;
-  samples.push({ tS: time, positionM: x, forceN: 0 });
+  samples.push({
+    tS: time,
+    positionM: x,
+    forceN: 0,
+    inputWorkJ: inputJ,
+    usefulWorkJ: m * G * x * sin,
+  });
 
   const heightGainM = x * sin;
   const ledger: EnergyLedger = {
@@ -148,5 +167,28 @@ export function simulateInclinePull(p: InclineModelParams, opts: PullOptions = {
     heightGainM,
     ledger,
     samples,
+  };
+}
+
+/** The incline run in the shared lab shape (input distance = along the ramp, output = height). */
+export function inclineMachineRun(p: InclineModelParams, opts: PullOptions = {}): MachineRun {
+  const r = simulateInclinePull(p, opts);
+  const sin = Math.sin(degToRad(p.angleDeg));
+  return {
+    durationS: r.durationS,
+    steadyInputForceN: r.steadyForceN,
+    totalOutputDistanceM: r.heightGainM,
+    ledger: r.ledger,
+    // The raw run repeats its final instant with 0 N (pull released); drop that duplicate.
+    samples: r.samples
+      .filter((s, i, all) => i === 0 || s.tS > (all[i - 1]?.tS ?? -1))
+      .map((s) => ({
+        tS: s.tS,
+        inputForceN: s.forceN,
+        inputDistanceM: s.positionM,
+        outputDistanceM: s.positionM * sin,
+        inputWorkJ: s.inputWorkJ,
+        usefulWorkJ: s.usefulWorkJ,
+      })),
   };
 }

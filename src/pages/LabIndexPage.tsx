@@ -7,11 +7,18 @@ import { labs, plannedLabs } from '@/content/quests';
 import { InclineDiagram } from '@/features/lab/InclineDiagram';
 import { DEFAULT_PULLEY_PARAMS } from '@/features/lab/pulley/params';
 import { PulleyDiagram } from '@/features/lab/pulley/PulleyDiagram';
+import { LeverDiagram } from '@/features/lab/machines/LeverDiagram';
+import { DEFAULT_LEVER_PARAMS } from '@/features/lab/machines/leverParams';
+import { WheelAxleDiagram } from '@/features/lab/machines/WheelAxleDiagram';
+import { DEFAULT_WHEEL_AXLE_PARAMS } from '@/features/lab/machines/wheelAxleParams';
+import { ButtonLink } from '@/components/ui/Button';
 import { useProgress } from '@/hooks/useProgress';
 
 const previews = {
   incline: <InclineDiagram angleDeg={25} friction={0.25} massKg={10} className="w-full" />,
   pulley: <PulleyDiagram params={{ ...DEFAULT_PULLEY_PARAMS, segments: 3 }} className="w-full" />,
+  lever: <LeverDiagram params={DEFAULT_LEVER_PARAMS} className="w-full" />,
+  wheel_axle: <WheelAxleDiagram params={DEFAULT_WHEEL_AXLE_PARAMS} className="w-full" />,
 };
 
 export default function LabIndexPage() {
@@ -22,6 +29,11 @@ export default function LabIndexPage() {
         eyebrow="Laboratory"
         title="Laboratory"
         description="Choose a machine. Each lab measures input and output work so you can find its efficiency."
+        actions={
+          <ButtonLink to="/lab/compare" icon="progress">
+            Compare machines
+          </ButtonLink>
+        }
       />
       <ul className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {labs.map((l) => (

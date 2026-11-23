@@ -19,9 +19,9 @@ There is no authentication system, so no route protection is claimed. `/teacher`
 | `/` | Student dashboard | Redirects to `/welcome` until the welcome screen is dismissed |
 | `/learn` | Modules list | Completion badges |
 | `/learn/:moduleId` | Module | Breadcrumbs; **Mark module complete** |
-| `/lab` | Lab picker | Inclined plane and pulley system, planned machines as plain text |
-| `/lab/incline` | Inclined-plane lab | Saving the Explain step completes the lab activity |
-| `/lab/pulley` | Pulley lab (Milestone 07) | Saving the reflection completes the lab activity; see `PULLEY_LAB.md` |
+| `/lab` | Lab picker | Four labs, planned machines as plain text, link to Compare |
+| `/lab/:machineId` | Lab (shared template) | `lever`, `incline`, `pulley`, `wheel-and-axle`; saving the Reflect step completes the lab activity; see `SIMPLE_MACHINES_LABS.md` |
+| `/lab/compare` | Compare machines | Latest trial per machine |
 | `/quests` | Quests list | Per-quest stage progress |
 | `/quests/:questId` | Quest | Breadcrumbs; stage route; reflection form at `#reflect` |
 | `/assess` | Diagnostics | Sample items only (real items pending, see §8) |

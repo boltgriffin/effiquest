@@ -55,7 +55,11 @@ describe('currentQuest', () => {
   });
 
   it('skips finished quests', () => {
-    const events = [ev('lesson_completed', 'torque'), ev('quest_stage', 'turning-forces:reflect')];
+    const events = [
+      ev('lesson_completed', 'torque'),
+      ev('activity_completed', 'lever'),
+      ev('quest_stage', 'turning-forces:reflect'),
+    ];
     expect(currentQuest(events)?.quest.id).toBe('effort-vs-efficiency');
   });
 });

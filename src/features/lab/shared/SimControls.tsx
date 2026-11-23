@@ -2,9 +2,10 @@ import { Button } from '@/components/ui/Button';
 import { formatQuantity } from '@/utils/format';
 import { canPause, canReplay, canResume, type PlaybackState } from './playback';
 
-interface PulleyControlsProps {
+interface SimControlsProps {
   state: PlaybackState;
   hasRun: boolean;
+  status: { idle: string; running: string; finished: string };
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -12,28 +13,27 @@ interface PulleyControlsProps {
   onReset: () => void;
 }
 
-const statusText: Record<PlaybackState['status'], string> = {
-  idle: 'Ready. The load is on the floor.',
-  running: 'Pulling the rope at a steady speed…',
-  paused: 'Paused.',
-  finished: 'Run complete. The load has risen 1 m.',
-};
-
-/** Start · Pause/Resume · Replay · Reset, with a spoken status line. */
-export function PulleyControls({
+/** Start · Pause/Resume · Replay · Reset, with a spoken status line. Same in every lab. */
+export function SimControls({
   state,
   hasRun,
+  status,
   onStart,
   onPause,
   onResume,
   onReplay,
   onReset,
-}: PulleyControlsProps) {
-  const running = state.status === 'running';
+}: SimControlsProps) {
+  const text = state.status === 'paused' ? 'Paused.' : status[state.status];
   return (
     <div className="flex flex-col gap-2">
       <div role="toolbar" aria-label="Simulation controls" className="flex flex-wrap gap-2">
-        <Button variant="primary" icon="play" onClick={onStart} disabled={running}>
+        <Button
+          variant="primary"
+          icon="play"
+          onClick={onStart}
+          disabled={state.status === 'running'}
+        >
           {hasRun ? 'Start new run' : 'Start'}
         </Button>
         {canResume(state) ? (
@@ -58,7 +58,7 @@ export function PulleyControls({
         </Button>
       </div>
       <p role="status" aria-live="polite" className="num text-sm text-muted">
-        {statusText[state.status]}
+        {text}
         {state.durationS > 0 && state.status !== 'idle' ? (
           <>
             {' '}

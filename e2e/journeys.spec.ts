@@ -69,15 +69,11 @@ test('a learner completes a full quest and sees it everywhere', async ({ page })
 
   // Stage 2: lab explanation completes the lab activity.
   await page.goto('/lab/incline');
-  await page.getByRole('button', { name: /Explain/ }).click();
-  await page
-    .getByLabel('What did you believe before the experiment?')
-    .fill('A gentle ramp wastes nothing.');
-  await page
-    .getByLabel('What did your measurements show?')
-    .fill('Friction turns some work into heat.');
-  await page.getByRole('button', { name: 'Save to journal' }).click();
-  await expect(page.getByText('Lab activity complete')).toBeVisible();
+  await page.getByRole('button', { name: /Reflect/ }).click();
+  const boxes = page.getByRole('textbox');
+  for (let i = 0; i < 3; i++) await boxes.nth(i).fill(`Reflection ${i + 1}`);
+  await page.getByRole('button', { name: 'Save and complete the lab' }).click();
+  await expect(page.getByText('Inclined plane lab complete')).toBeVisible();
 
   // Stage 3: answer the quest question.
   await page.goto('/quests/effort-vs-efficiency');

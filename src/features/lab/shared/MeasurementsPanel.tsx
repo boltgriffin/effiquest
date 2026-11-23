@@ -5,27 +5,35 @@ import { Callout } from '@/components/ui/Callout';
 import { Panel } from '@/components/ui/Panel';
 import { Readout } from '@/components/ui/Readout';
 import { EnergyFlowBar } from '../EnergyFlowBar';
-import type { LiveReading } from './measurement';
-import { samePulleyParams, type PulleyLabParams } from './params';
+import { sameParams, type LiveReading } from './measurement';
 import type { PlaybackState } from './playback';
-import type { LoadedRun } from './usePulleyRun';
+import type { LabParams, MachineDefinition } from './types';
+import type { LoadedRun } from './useMachineRun';
 
-interface Props {
+interface Props<P extends LabParams> {
+  def: MachineDefinition<P>;
   state: PlaybackState;
-  run: LoadedRun | null;
+  run: LoadedRun<P> | null;
   live: LiveReading | null;
-  params: PulleyLabParams;
+  params: P;
   onRecord: () => Promise<void>;
 }
 
 /**
- * Live measurement panel. Instruments (scale, rulers, work so far) update during the run;
- * mechanical advantage, velocity ratio and efficiency are shown once the lift is complete,
- * because they compare the whole movement.
+ * Live measurement panel, identical in every lab. Instruments (scale, rulers, work so far)
+ * update during the run; AMA, the ideal ratio and efficiency appear once the run is complete,
+ * because they compare the whole movement. Nothing is shown before it has been measured.
  */
-export function PulleyMeasurements({ state, run, live, params, onRecord }: Props) {
+export function MeasurementsPanel<P extends LabParams>({
+  def,
+  state,
+  run,
+  live,
+  params,
+  onRecord,
+}: Props<P>) {
   const [saved, setSaved] = useState<{
-    for: LoadedRun | null;
+    for: LoadedRun<P> | null;
     state: 'idle' | 'saving' | 'saved' | 'error';
   }>({
     for: null,
@@ -33,12 +41,13 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
   });
   const finished = state.status === 'finished' && run !== null;
   const m = finished ? run.measurement : null;
-  const stale = run !== null && !samePulleyParams(run.params, params);
+  const stale = run !== null && !sameParams(run.params, params);
   // A recorded trial only counts for the unchanged set-up.
   const recorded = saved.state === 'saved' && saved.for === run && !stale;
   const v = (x: number | undefined | null) =>
     x === undefined || x === null || !Number.isFinite(x) ? null : x;
   const calc = (r: { ok: boolean; value?: number } | undefined) => (r && r.ok ? v(r.value) : null);
+  const digits = def.rulerResolutionM < 0.01 ? 3 : 2;
 
   const record = async () => {
     setSaved({ for: run, state: 'saving' });
@@ -54,7 +63,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
     <Panel
       eyebrow={state.status === 'running' ? 'Live' : 'Results'}
       title="Measurements"
-      labelledBy="pulley-measurements"
+      labelledBy={`${def.id}-measurements`}
       actions={
         <Button
           size="sm"
@@ -69,8 +78,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
       <div className="flex flex-col gap-4">
         {stale ? (
           <Callout tone="warning" role="status" title="You changed the set-up after this run">
-            These numbers are for {run.params.segments} segment(s), {run.params.loadMassKg} kg.
-            Press Start to measure the new set-up.
+            These numbers belong to the previous set-up. Press Start to measure the new one.
           </Callout>
         ) : null}
         {m && !m.check.valid ? (
@@ -96,13 +104,11 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
               </>
             }
             label={m ? 'Input force (steady)' : 'Input force (scale)'}
-            // During the run: the live scale. After it: the steady reading the results use
-            // (the scale dips while the pull slows to a stop at the end).
-            value={v(m ? m.inputForceN : live?.effortN)}
+            value={v(m ? m.inputForceN : live?.inputForceN)}
             unit="N"
             digits={1}
             tone="input"
-            definition="Spring-scale reading on the rope you pull. It is higher while speeding up, lower while slowing down, and steady in between; the results use the steady reading."
+            definition="Spring-scale reading on the effort. It is higher while speeding up, lower while slowing down and steady in between; the results use the steady reading."
           />
           <Readout
             symbol={
@@ -115,7 +121,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
             unit="N"
             digits={1}
             tone="output"
-            definition="Force the machine exerts on the load while lifting it at steady speed (equal to its weight)."
+            definition="Force on the load while it rises at steady speed (equal to its weight)."
           />
           <Readout
             symbol={
@@ -123,9 +129,10 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
                 d<sub>in</sub>
               </>
             }
-            label="Rope pulled"
-            value={v(live?.ropePulledM)}
+            label={def.labels.inputDistance}
+            value={v(m ? m.inputDistanceM : live?.inputDistanceM)}
             unit="m"
+            digits={digits}
             tone="input"
           />
           <Readout
@@ -134,9 +141,10 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
                 d<sub>out</sub>
               </>
             }
-            label="Load raised"
-            value={v(live?.loadRiseM)}
+            label={def.labels.outputDistance}
+            value={v(m ? m.outputDistanceM : live?.outputDistanceM)}
             unit="m"
+            digits={digits}
             tone="output"
           />
           <Readout
@@ -149,7 +157,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
             value={v(live?.inputWorkJ)}
             unit="J"
             tone="input"
-            definition="Work done by your pull so far."
+            definition="Work done by the effort so far."
           />
           <Readout
             symbol={
@@ -165,17 +173,17 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
           />
           <Readout
             symbol="AMA"
-            label="Mechanical advantage"
+            label="Actual mech. advantage"
             value={calc(m?.ama)}
             unit=""
-            definition="F_out ÷ F_in, using the steady scale reading."
+            definition="F_out ÷ F_in, from the steady reading. Includes the effect of friction."
           />
           <Readout
-            symbol="VR"
-            label="Velocity ratio"
+            symbol="IMA"
+            label="Ideal mech. advantage"
             value={calc(m?.vr)}
             unit=""
-            definition="d_in ÷ d_out. Ideal value: friction does not change it."
+            definition={`d_in ÷ d_out (${def.labels.idealMA}). Geometry only: friction does not change it.`}
           />
         </div>
         <Readout
@@ -185,7 +193,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
           unit="%"
           digits={1}
           size="lg"
-          definition="W_out ÷ W_in × 100% over the whole lift. Measured, never set."
+          definition="W_out ÷ W_in × 100% over the whole run. Measured, never set."
         />
 
         {m && m.check.valid ? (
@@ -200,7 +208,7 @@ export function PulleyMeasurements({ state, run, live, params, onRecord }: Props
           </>
         ) : state.status === 'idle' ? (
           <p className="text-sm text-muted">
-            Press Start. The readings update as the rope is pulled.
+            Press Start. The readings update as the machine moves.
           </p>
         ) : null}
 

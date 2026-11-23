@@ -13,8 +13,8 @@ import RootLayout from './RootLayout';
 
 // Heavier screens are split out: lab (diagram + 3D), progress (charts), settings, design reference.
 const LabIndexPage = lazy(() => import('@/pages/LabIndexPage'));
-const InclineLabPage = lazy(() => import('@/pages/InclineLabPage'));
-const PulleyLabPage = lazy(() => import('@/pages/PulleyLabPage'));
+const MachineLabPage = lazy(() => import('@/pages/MachineLabPage'));
+const LabComparePage = lazy(() => import('@/pages/LabComparePage'));
 const ProgressPage = lazy(() => import('@/pages/ProgressPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const DesignPage = lazy(() => import('@/pages/DesignPage'));
@@ -48,8 +48,8 @@ export const router = createBrowserRouter([
           { path: 'learn', element: <LearnPage /> },
           { path: 'learn/:moduleId', element: <ModulePage /> },
           { path: 'lab', element: lazyPage(<LabIndexPage />) },
-          { path: 'lab/incline', element: lazyPage(<InclineLabPage />) },
-          { path: 'lab/pulley', element: lazyPage(<PulleyLabPage />) },
+          { path: 'lab/compare', element: lazyPage(<LabComparePage />) },
+          { path: 'lab/:machineId', element: lazyPage(<MachineLabPage />) },
           { path: 'quests', element: <QuestsPage /> },
           { path: 'quests/:questId', element: <QuestPage /> },
           { path: 'assess', element: <AssessPage /> },

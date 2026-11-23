@@ -5,6 +5,7 @@ import type { Group, Mesh } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { DRAWING, pulleyLayout } from '@/features/lab/pulley/layout';
 import { useUiStore } from '@/store/uiStore';
+import { SceneLabel } from './SceneLabel';
 
 /**
  * 3D pulley system built from the same layout as the 2D diagram (one source of truth for which
@@ -149,11 +150,27 @@ export function PulleyScene({
           <boxGeometry args={[0.12, 0.3, 0.12]} />
           <meshStandardMaterial color={c.input} />
         </mesh>
+        <SceneLabel position={[0.3, 0, 0]}>Effort (scale)</SceneLabel>
       </group>
+      {l.sheaves.some((s) => s.kind === 'fixed') ? (
+        <SceneLabel
+          position={[
+            wx(l.sheaves.find((s) => s.kind === 'fixed')?.x ?? 0) - 0.45,
+            wy(FIXED_Y) + 0.1,
+            0,
+          ]}
+        >
+          Fixed pulley
+        </SceneLabel>
+      ) : null}
 
       {/* Moving parts */}
       <group ref={movingRef}>
         {movable.map((s) => sheave(s.x, REST_Y, c.brand, `ms-${s.x}`))}
+        {movable.length ? (
+          <SceneLabel position={[wx(left) - 0.5, wy(REST_Y), 0]}>Movable pulley</SceneLabel>
+        ) : null}
+        <SceneLabel position={[wx(loadCx), LOAD_TOP + 0.12, 0.3]}>Load</SceneLabel>
         {segments >= 2 ? (
           <mesh position={[wx((left + right) / 2), wy(REST_Y) - r - 0.05, 0]}>
             <boxGeometry args={[(right - left) * S + 0.25, 0.08, 0.12]} />
@@ -172,7 +189,8 @@ export function PulleyScene({
 
       <gridHelper args={[6, 12, c.grid, c.grid]} position={[0, 0, 0]} />
       <OrbitControls
-        target={[0, 1.4, 0]}
+        makeDefault
+        target={[0.2, 1.6, 0]}
         enablePan={false}
         minDistance={2}
         maxDistance={9}

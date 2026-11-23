@@ -1,5 +1,6 @@
 import { G, isNonNegative, isPositive, validation, type Validation } from './constants';
 import type { EnergyLedger } from './ledger';
+import type { MachineRun } from './run';
 
 /**
  * Pulley system with n supporting rope segments (1 = single fixed pulley; 2-6 = block and
@@ -214,5 +215,25 @@ export function simulatePulleyLift(p: PulleyParams, opts: LiftOptions = {}): Lif
       ],
       deltaKineticJ: 0.5 * movingM * v * v,
     },
+  };
+}
+
+/** The pulley run in the shared lab shape (input distance = rope pulled, output = load rise). */
+export function pulleyMachineRun(p: PulleyParams, opts: LiftOptions = {}): MachineRun {
+  const r = simulatePulleyLift(p, opts);
+  const last = r.samples[r.samples.length - 1];
+  return {
+    durationS: r.durationS,
+    steadyInputForceN: r.steadyEffortN,
+    totalOutputDistanceM: last?.loadRiseM ?? 0,
+    ledger: r.ledger,
+    samples: r.samples.map((s) => ({
+      tS: s.tS,
+      inputForceN: s.effortN,
+      inputDistanceM: s.ropePulledM,
+      outputDistanceM: s.loadRiseM,
+      inputWorkJ: s.inputWorkJ,
+      usefulWorkJ: s.usefulWorkJ,
+    })),
   };
 }

@@ -1,5 +1,6 @@
 import { degToRad, G, isNonNegative, isPositive, validation, type Validation } from './constants';
 import type { EnergyLedger } from './ledger';
+import { accelAt, sampleEvery, trapezoidProfile, type MachineRun, type MachineSample } from './run';
 
 /**
  * First-class lever (fulcrum between effort and load) turned slowly through a small angle,
@@ -79,6 +80,85 @@ export function solveLever(p: LeverParams): LeverResult {
       usefulJ: loadN * loadDistanceM,
       losses: [{ kind: 'friction', label: 'Friction in the pivot', joules: frictionTorque * phi }],
       deltaKineticJ: 0,
+    },
+  };
+}
+
+export interface LeverTurnOptions {
+  /** Steady turning speed of the beam (rad/s). */
+  angularSpeed?: number;
+  rampTimeS?: number;
+  dtS?: number;
+}
+
+/**
+ * Time simulation of the lever turned slowly through `rotationDeg` (rest → steady → rest).
+ * The load (mass m on the load arm) has tangential acceleration a = α·L_l, so at each instant
+ *   F·L_e = (W + m a)·L_l + μ_p·r_p·N,   N = F + W + m a   (massless beam, forces ⟂ beam)
+ *   ⇒ F = (W + m a)(L_l + μ_p r_p) / (L_e − μ_p r_p).
+ * Input, useful and friction work are integrated separately; the ledger closes to rounding error.
+ */
+export function simulateLeverTurn(p: LeverParams, opts: LeverTurnOptions = {}): MachineRun {
+  const omega = opts.angularSpeed ?? 0.12;
+  const phiMax = degToRad(p.rotationDeg);
+  const prof = trapezoidProfile(phiMax, omega, opts.rampTimeS, opts.dtS);
+  const dt = prof.dtS;
+  const m = p.loadMassKg;
+  const W = m * G;
+  const muR = p.pivotFriction * p.pinRadiusM;
+  const effortFor = (alpha: number) =>
+    ((W + m * alpha * p.loadArmM) * (p.loadArmM + muR)) / (p.effortArmM - muR);
+
+  let theta = 0;
+  let w = 0;
+  let inputJ = 0;
+  let usefulJ = 0;
+  let frictionJ = 0;
+  const every = sampleEvery(prof);
+  const samples: MachineSample[] = [
+    {
+      tS: 0,
+      inputForceN: effortFor(0),
+      inputDistanceM: 0,
+      outputDistanceM: 0,
+      inputWorkJ: 0,
+      usefulWorkJ: 0,
+    },
+  ];
+
+  for (let step = 0; step < prof.totalSteps; step++) {
+    const wNext = step === prof.totalSteps - 1 ? 0 : w + accelAt(prof, step) * dt;
+    const alpha = (wNext - w) / dt;
+    const dTheta = ((w + wNext) / 2) * dt;
+    const F = effortFor(alpha);
+    const N = F + W + m * alpha * p.loadArmM;
+    theta += dTheta;
+    inputJ += F * p.effortArmM * dTheta;
+    usefulJ += W * p.loadArmM * dTheta;
+    frictionJ += muR * N * dTheta;
+    w = wNext;
+    if ((step + 1) % every === 0 || step === prof.totalSteps - 1) {
+      samples.push({
+        tS: (step + 1) * dt,
+        inputForceN: F,
+        inputDistanceM: p.effortArmM * theta,
+        outputDistanceM: p.loadArmM * theta,
+        inputWorkJ: inputJ,
+        usefulWorkJ: usefulJ,
+      });
+    }
+  }
+
+  return {
+    durationS: prof.totalSteps * dt,
+    steadyInputForceN: effortFor(0),
+    totalOutputDistanceM: p.loadArmM * theta,
+    samples,
+    ledger: {
+      inputJ,
+      usefulJ,
+      losses: [{ kind: 'friction', label: 'Friction in the pivot', joules: frictionJ }],
+      deltaKineticJ: 0.5 * m * (w * p.loadArmM) ** 2,
     },
   };
 }

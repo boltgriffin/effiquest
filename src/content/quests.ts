@@ -15,7 +15,7 @@ export type QuestStage =
   | { id: string; kind: 'lab'; title: string; labId: LabId }
   | { id: string; kind: 'reflect'; title: string };
 
-export type LabId = 'incline' | 'pulley';
+export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle';
 
 export interface Quest {
   id: string;
@@ -67,6 +67,7 @@ export const quests: readonly Quest[] = [
     misconceptionId: 'G1',
     stages: [
       { id: 'lesson', kind: 'lesson', title: 'Torque and rotational motion', moduleId: 'torque' },
+      { id: 'lab', kind: 'lab', title: 'Feel torque with a lever', labId: 'lever' },
       reflect,
     ],
   },
@@ -97,6 +98,14 @@ export interface LabInfo {
 
 export const labs: readonly LabInfo[] = [
   {
+    id: 'lever',
+    title: 'Lever',
+    to: '/lab/lever',
+    icon: 'lever',
+    question:
+      'Where should the fulcrum go to make lifting easier, and does that change the efficiency?',
+  },
+  {
     id: 'incline',
     title: 'Inclined plane',
     to: '/lab/incline',
@@ -110,10 +119,21 @@ export const labs: readonly LabInfo[] = [
     icon: 'pulley',
     question: 'Do more rope segments make lifting easier, more efficient, or both?',
   },
+  {
+    id: 'wheel_axle',
+    title: 'Wheel and axle',
+    to: '/lab/wheel-and-axle',
+    icon: 'reset',
+    question:
+      'How does the size of the wheel change the effort, and where does the lost energy go?',
+  },
 ];
 
-/** First-release machines not built yet (decision D-05), shown as plain text, never as links. */
-export const plannedLabs: readonly string[] = ['Lever', 'Wheel and axle', 'Hydraulic press'];
+/**
+ * Machines not built yet, shown as plain text, never as links. Hydraulic press is in the first
+ * release (D-05); screw and wedge are named in the concept note (SRC-O3) and come next (D-05).
+ */
+export const plannedLabs: readonly string[] = ['Hydraulic press', 'Screw', 'Wedge'];
 
 export function findQuest(id: string | undefined): Quest | undefined {
   return quests.find((q) => q.id === id);

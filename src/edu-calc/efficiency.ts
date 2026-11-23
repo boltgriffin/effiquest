@@ -3,6 +3,8 @@ import { basisPhrase, result } from './result';
 import type { Basis, CalcResult } from './types';
 import { Inputs } from './validation';
 
+const ROUNDING_TOLERANCE = 1e-9;
+
 export interface EfficiencyInput {
   /** Useful output work, e.g. the potential energy gained by the load (J). */
   usefulWorkJ: number;
@@ -23,7 +25,9 @@ export function efficiency(
   const v = new Inputs()
     .nonNegative('usefulWorkJ', 'Useful (output) work', input.usefulWorkJ, 'J')
     .positive('inputWorkJ', 'Input work', input.inputWorkJ, 'J');
-  if (v.ok && input.usefulWorkJ > input.inputWorkJ) {
+  // A relative tolerance of 1e-9 absorbs floating-point rounding in simulated works (a perfect
+  // machine can compute 98.10000000000001 J out of 98.1 J); real excesses are still rejected.
+  if (v.ok && input.usefulWorkJ > input.inputWorkJ * (1 + ROUNDING_TOLERANCE)) {
     v.add(
       'usefulWorkJ',
       'Output work is larger than input work. A real machine cannot do that - check your measurements.',
@@ -32,8 +36,9 @@ export function efficiency(
   if (!v.ok) return v.fail('Efficiency');
 
   const basis = opts.basis ?? 'measured';
-  const value = (input.usefulWorkJ / input.inputWorkJ) * 100;
-  const lostJ = input.inputWorkJ - input.usefulWorkJ;
+  // Within the rounding tolerance only: never report more than 100 %.
+  const value = Math.min(100, (input.usefulWorkJ / input.inputWorkJ) * 100);
+  const lostJ = Math.max(0, input.inputWorkJ - input.usefulWorkJ);
   const warnings =
     value === 100
       ? [
