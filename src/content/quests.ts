@@ -18,7 +18,7 @@ export type QuestStage =
   | { id: string; kind: 'check'; title: string; assessmentId: string }
   | { id: string; kind: 'reflect'; title: string };
 
-export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic';
+export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic' | 'screw' | 'wedge';
 
 export interface Quest {
   id: string;
@@ -168,13 +168,28 @@ export const labs: readonly LabInfo[] = [
     question:
       'How does a small push on a small piston lift a heavy load, and what do real presses lose?',
   },
+  {
+    id: 'screw',
+    title: 'Screw jack',
+    to: '/lab/screw',
+    icon: 'screw',
+    question:
+      'How can a small push on a handle lift half a tonne, and why does a good jack waste more than half the work?',
+  },
+  {
+    id: 'wedge',
+    title: 'Wedge',
+    to: '/lab/wedge',
+    icon: 'wedge',
+    question: 'Does a thinner wedge make lifting easier, more efficient, or both?',
+  },
 ];
 
 /**
- * Machines not built yet, shown as plain text, never as links. Screw and wedge are named in the
- * concept note (SRC-O3) and come next (D-05).
+ * Machines not built yet, shown as plain text, never as links. Compound machines are named in the
+ * concept note (SRC-G3, SRC-O3, SRC-O6) and come after the six simple machines (D-05).
  */
-export const plannedLabs: readonly string[] = ['Screw', 'Wedge'];
+export const plannedLabs: readonly string[] = ['Bicycle (compound)', 'Hydraulic brake (compound)'];
 
 export function findQuest(id: string | undefined): Quest | undefined {
   return quests.find((q) => q.id === id);

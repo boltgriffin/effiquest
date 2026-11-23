@@ -100,6 +100,8 @@ export interface MachineDefinition<P extends LabParams> {
   guide: GuideContent;
   /** Optional machine-specific results shown after a run (e.g. fluid pressure). */
   extraReadouts?(p: P, run: MachineRun): ExtraReadout[];
+  /** One plain sentence about the finished run (e.g. whether the machine holds the load by itself). */
+  resultNote?(p: P, run: MachineRun): string | null;
   Diagram: ComponentType<DiagramProps<P>>;
   View3D: LazyExoticComponent<ComponentType<View3DProps<P>>>;
 }

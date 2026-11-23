@@ -386,7 +386,19 @@ const simpleCompound: Lesson = {
         },
         {
           kind: 'text',
-          text: 'The lab has the lever, pulley, wheel and axle, inclined plane and hydraulic press. Screw and wedge labs come later.',
+          text: 'The lab has all six simple machines and the hydraulic press. Compound machines (such as the bicycle) come later.',
+        },
+        {
+          kind: 'lab',
+          labId: 'screw',
+          prompt:
+            'The screw is an inclined plane wrapped round a cylinder: compare a fine and a coarse thread in the screw jack lab.',
+        },
+        {
+          kind: 'lab',
+          labId: 'wedge',
+          prompt:
+            'The wedge is a moving inclined plane: try a thin and a thick wedge and compare the efficiency.',
         },
       ],
     },

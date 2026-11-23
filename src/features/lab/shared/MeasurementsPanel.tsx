@@ -212,6 +212,13 @@ export function MeasurementsPanel<P extends LabParams>({
           </div>
         ) : null}
 
+        {m && run && def.resultNote
+          ? (() => {
+              const note = def.resultNote(run.params, run.result);
+              return note ? <Callout tone="info">{note}</Callout> : null;
+            })()
+          : null}
+
         {m && m.check.valid ? (
           <>
             <EnergyFlowBar inputJ={m.inputWorkJ} usefulJ={m.outputWorkJ} losses={m.losses} />

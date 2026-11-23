@@ -10,11 +10,11 @@ Milestone 08: simple-machine laboratories on one shared template.
 | Pulley | ✔ | first release | Moved onto the template (`/lab/pulley`) |
 | Inclined plane | ✔ | first release | Moved onto the template (`/lab/incline`) |
 | Wheel and axle | ✔ | first release | **New lab** `/lab/wheel-and-axle` |
-| Screw | ✔ | "comes next" | Not built; listed as *coming next* |
-| Wedge | ✔ | "comes next" | Not built; listed as *coming next* |
+| Screw | ✔ | approved 2026-11-23 (D-22) | **Built in Milestone 14**: screw jack at `/lab/screw` (§9) |
+| Wedge | ✔ | approved 2026-11-23 (D-22) | **Built in Milestone 14**: lifting wedge at `/lab/wedge` (§9) |
 | Hydraulic press | (SRC-O4, not a simple machine) | first release | Added in Milestone 09 on the same template: see `HYDRAULICS_LAB.md` |
 
-Screw and wedge are in the source but were deferred by the owner's D-05, so they were not built. Building them needs the owner's go-ahead (see §8).
+Screw and wedge were deferred by D-05 and approved by the owner on 2026-11-23 (D-22); they were built in Milestone 14 (§9). Compound machines (bicycle, hydraulic brake) are still to come.
 
 ## 2. Shared laboratory template (`src/features/lab/shared`)
 
@@ -105,5 +105,40 @@ Each definition includes an objective with concept-note links, a plain-language 
   - knowledge-check feedback, the comparison page, and an unknown machine giving not-found.
 
 ## 8. Open items for the owner
-1. **Screw and wedge** are in the concept note but deferred by D-05. Should they be the next labs, before or after the hydraulic press?
+1. ~~Screw and wedge~~: built in Milestone 14 (D-22).
 2. All lab text and knowledge-check items need the teacher's review (D-10).
+
+## 9. Milestone 14: screw jack and lifting wedge
+
+Both labs use the shared template: a physics module, settings, a definition, a 2D diagram and a 3D view.
+
+| | Screw jack (`physics-core/screw.ts`) | Lifting wedge (`physics-core/wedge.ts`) |
+|---|---|---|
+| Machine | a handle of radius R turns a square-thread screw (pitch p, thread radius r_m = 12 mm) that raises the load | a wedge of angle α is pushed along the floor under a load held by vertical guides |
+| IMA | 2πR ÷ p (e.g. 314 for R = 0.25 m, p = 5 mm) | 1 ÷ tan α = length ÷ thickness |
+| Losses (named, each integrated separately) | thread friction μ: the thread is an inclined plane wrapped round the screw (lead angle λ, tan λ = p ÷ 2π r_m); N = Q cos λ + P sin λ, sliding r_m dθ ÷ cos λ | friction μ on both faces: wedge–load (normal N₁ = Q ÷ (cos α − μ sin α), sliding x ÷ cos α) and wedge–floor (N₂ = Q, sliding x) |
+| Effort | F = Q r_m tan(λ + φ) ÷ R, with Q = W + m a | F = Q [tan(α + φ) + tan φ] |
+| Efficiency (closed form, check) | tan λ ÷ tan(λ + φ) | W tan α ÷ F |
+| Teaching point | **self-locking** when φ ≥ λ: the jack holds the load by itself, and is then always under 50 % efficient | **self-locking** when α ≤ 2φ: the wedge stays put (door wedge); a thin wedge gives a bigger advantage but a lower efficiency |
+| Default check by hand | 500 kg, R 0.25 m, p 5 mm, μ 0.15: λ 3.79°, φ 8.53°, τ 12.86 N·m, **F 51.4 N**, IMA 314.16, **η 30.4 %**, self-locking | 100 kg, α 10°, μ 0.15: **F 476.0 N**, IMA 5.67, **η 36.3 %**, self-locking |
+
+**Validation (`physics-core/screwWedge.test.ts`, 10 tests):**
+- the hand values above;
+- the energy ledger closes to below 10⁻⁹ of the input;
+- with no friction, η = 100 % exactly (AMA = IMA);
+- trends: a finer pitch means less effort but lower efficiency; a thinner wedge means less push but lower efficiency;
+- self-locking flags;
+- invalid set-ups are rejected.
+
+**Template addition:**
+- an optional `resultNote` sentence after a run, used for self-locking ("you can let go of the handle and the load stays up").
+
+**Display:**
+- the screw's 20 mm rise is drawn larger than true and labelled so, and true values are shown as numbers;
+- the 3D screw has a real helical thread that turns with the handle;
+- the wedge is drawn to scale, and the flat-bottomed load rests on the slope by its uphill edge.
+
+**Other changes:**
+- new icons `screw` and `wedge`;
+- the Lab page lists all six simple machines plus the hydraulic press, with "coming next" now the compound machines (bicycle, hydraulic brake);
+- the "simple to compound" lesson links to both new labs.

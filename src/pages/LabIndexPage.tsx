@@ -12,6 +12,10 @@ import { DEFAULT_LEVER_PARAMS } from '@/features/lab/machines/leverParams';
 import { WheelAxleDiagram } from '@/features/lab/machines/WheelAxleDiagram';
 import { HydraulicDiagram } from '@/features/lab/machines/HydraulicDiagram';
 import { DEFAULT_HYDRAULIC_PARAMS } from '@/features/lab/machines/hydraulicParams';
+import { ScrewDiagram } from '@/features/lab/machines/ScrewDiagram';
+import { DEFAULT_SCREW_PARAMS } from '@/features/lab/machines/screwParams';
+import { WedgeDiagram } from '@/features/lab/machines/WedgeDiagram';
+import { DEFAULT_WEDGE_PARAMS } from '@/features/lab/machines/wedgeParams';
 import { DEFAULT_WHEEL_AXLE_PARAMS } from '@/features/lab/machines/wheelAxleParams';
 import { ButtonLink } from '@/components/ui/Button';
 import { useProgress } from '@/hooks/useProgress';
@@ -22,6 +26,8 @@ const previews = {
   lever: <LeverDiagram params={DEFAULT_LEVER_PARAMS} className="w-full" />,
   wheel_axle: <WheelAxleDiagram params={DEFAULT_WHEEL_AXLE_PARAMS} className="w-full" />,
   hydraulic: <HydraulicDiagram params={DEFAULT_HYDRAULIC_PARAMS} className="w-full" />,
+  screw: <ScrewDiagram params={DEFAULT_SCREW_PARAMS} className="w-full" />,
+  wedge: <WedgeDiagram params={DEFAULT_WEDGE_PARAMS} className="w-full" />,
 };
 
 export default function LabIndexPage() {

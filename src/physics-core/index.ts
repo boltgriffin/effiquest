@@ -64,5 +64,24 @@ export {
   type PulleyResult,
 } from './pulley';
 
+export {
+  DEFAULT_SCREW,
+  frictionAngle,
+  leadAngle,
+  simulateScrewLift,
+  solveScrew,
+  validateScrew,
+  type ScrewParams,
+  type ScrewSteady,
+} from './screw';
+export {
+  DEFAULT_WEDGE,
+  simulateWedgePush,
+  solveWedge,
+  validateWedge,
+  type WedgeParams,
+  type WedgeSteady,
+} from './wedge';
+
 /** Bumped whenever a model changes, and stored with each recorded trial. */
-export const ENGINE_VERSION = 'physics-core@1.0.0';
+export const ENGINE_VERSION = 'physics-core@1.1.0';

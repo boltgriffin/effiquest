@@ -103,7 +103,7 @@ test.describe('lever and wheel-and-axle labs, comparison', () => {
   });
 
   test('unknown machine shows not found', async ({ page }) => {
-    await page.goto('/lab/screw');
+    await page.goto('/lab/bicycle');
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
   });
 });
@@ -161,5 +161,74 @@ test.describe('hydraulic press lab', () => {
   test('the pressure quest now includes the hydraulic lab', async ({ page }) => {
     await page.goto('/quests/pressure-at-work');
     await expect(page.getByText('Lift a load with a hydraulic press').first()).toBeVisible();
+  });
+});
+
+test.describe('screw jack and wedge labs', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'effiquest-ui',
+        JSON.stringify({
+          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          version: 0,
+        }),
+      );
+    });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addLocatorHandler(page.getByRole('button', { name: 'Dismiss' }), async (b) => {
+      await b.click();
+    });
+  });
+
+  test('screw jack: hand-checked readings and the self-locking note', async ({ page }) => {
+    await page.goto('/lab/screw');
+    await expect(page.getByRole('heading', { level: 1, name: 'Screw jack' })).toBeVisible();
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(page.getByText('Run complete. The load has risen 20 mm.')).toBeVisible();
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    // F = 4905 N × 0.012 m × tan(3.79° + 8.53°) ÷ 0.25 m = 51.4 N; IMA = 2π × 0.25 ÷ 0.005 = 314.16
+    await expect(panel).toContainText('51.4');
+    await expect(panel).toContainText('314.16');
+    await expect(panel.getByText(/you can let go of the handle/)).toBeVisible();
+  });
+
+  test('screw jack without friction is 100 % efficient and not self-locking', async ({ page }) => {
+    await page.goto('/lab/screw');
+    await page.getByRole('slider', { name: /Thread friction/ }).focus();
+    await page.keyboard.press('Home');
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    await expect(panel.getByText('100.0').first()).toBeVisible();
+    await expect(panel.getByText(/does NOT hold the load by itself/)).toBeVisible();
+  });
+
+  test('wedge: hand-checked readings', async ({ page }) => {
+    await page.goto('/lab/wedge');
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(page.getByText('Run complete. The wedge has moved 0.2 m.')).toBeVisible();
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    // F = 981 N × [tan(10° + 8.53°) + 0.15] = 476.0 N; IMA = 1 ÷ tan 10° = 5.67
+    await expect(panel).toContainText('476.0');
+    await expect(panel).toContainText('5.67');
+    await expect(
+      page.getByRole('img', { name: /wedge and the load.*wedge and the floor/i }),
+    ).toBeVisible();
+  });
+
+  test('both labs are listed; compound machines are shown as coming next', async ({ page }) => {
+    await page.goto('/lab');
+    await expect(page.getByRole('link', { name: /Screw jack/ }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Wedge/ }).first()).toBeVisible();
+    await expect(page.getByText(/Bicycle \(compound\)/)).toBeVisible();
   });
 });

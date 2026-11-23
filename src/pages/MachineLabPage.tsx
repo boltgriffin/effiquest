@@ -4,6 +4,8 @@ import { hydraulicLab } from '@/features/lab/machines/hydraulic';
 import { inclineLab } from '@/features/lab/machines/incline';
 import { leverLab } from '@/features/lab/machines/lever';
 import { pulleyLab } from '@/features/lab/machines/pulley';
+import { screwLab } from '@/features/lab/machines/screw';
+import { wedgeLab } from '@/features/lab/machines/wedge';
 import { wheelAxleLab } from '@/features/lab/machines/wheelAxle';
 import { MachineLab } from '@/features/lab/shared/MachineLab';
 
@@ -22,6 +24,10 @@ export default function MachineLabPage() {
       return <MachineLab key="wheel" def={wheelAxleLab} />;
     case 'hydraulic-press':
       return <MachineLab key="hydraulic" def={hydraulicLab} />;
+    case 'screw':
+      return <MachineLab key="screw" def={screwLab} />;
+    case 'wedge':
+      return <MachineLab key="wedge" def={wedgeLab} />;
     default:
       return <NotFoundState />;
   }
