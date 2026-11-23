@@ -7,22 +7,23 @@ import { Dialog } from '@/components/ui/Dialog';
 import { TextField } from '@/components/ui/Field';
 import { Panel } from '@/components/ui/Panel';
 import { env } from '@/config/env';
-import { signOut } from '@/services/backend/auth';
+import { signInLearner, signOut } from '@/services/backend/auth';
 import { toBackendError } from '@/services/backend/client';
 import {
   deleteMyCloudData,
-  joinClass,
   myClass,
   syncLearnerData,
   type LearnerClass,
   type SyncReport,
 } from '@/services/backend/learner';
-import { checkJoinCode } from '@/services/backend/validation';
+import { checkJoinCode, checkLearnerCode, checkPin } from '@/services/backend/validation';
+import { useLearnerStore } from '@/store/learnerStore';
 import { useCloudUser } from './useCloudUser';
 
 /**
- * Settings → Online class (learner). Joining uses the teacher's class code and this device's
- * learner code; no email, no password, no name. Work always stays on the device first.
+ * Settings → Online class (learner). Learners sign in with the class code, their learner code and
+ * the PIN on the slip from their teacher (decision D-20): no email, no name. Work is always saved
+ * on the device first; on a shared computer, sign out when finished.
  */
 export function LearnerCloudPanel({ learnerCode }: { learnerCode: string | null }) {
   const { state, refresh } = useCloudUser();
@@ -49,33 +50,65 @@ export function LearnerCloudPanel({ learnerCode }: { learnerCode: string | null 
             message={state.message}
             onRetry={refresh}
           />
-        ) : !learnerCode ? (
-          <p className="text-sm text-muted">Save your learner code above first.</p>
         ) : state.user?.roles.includes('learner') ? (
           <Joined learnerCode={learnerCode} onChanged={refresh} />
+        ) : state.user ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted">
+              A teacher account is signed in on this device. Sign out before a learner signs in.
+            </p>
+            <div>
+              <Button onClick={() => void signOut().then(refresh, refresh)}>Sign out</Button>
+            </div>
+          </div>
         ) : (
-          <JoinForm learnerCode={learnerCode} onJoined={refresh} />
+          <SignInForm learnerCode={learnerCode} onSignedIn={refresh} />
         )}
       </Panel>
     </section>
   );
 }
 
-function JoinForm({ learnerCode, onJoined }: { learnerCode: string; onJoined: () => void }) {
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | undefined>();
+function SignInForm({
+  learnerCode,
+  onSignedIn,
+}: {
+  learnerCode: string | null;
+  onSignedIn: () => void;
+}) {
+  const setLearnerCode = useLearnerStore((s) => s.setLearnerCode);
+  const [classCode, setClassCode] = useState('');
+  const [code, setCode] = useState(learnerCode ?? '');
+  const [pin, setPin] = useState('');
+  const [errors, setErrors] = useState<{
+    classCode?: string;
+    code?: string;
+    pin?: string;
+    form?: string;
+  }>({});
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    const c = checkJoinCode(code);
-    if (!c.ok) return setError(c.error);
-    setError(undefined);
+    const j = checkJoinCode(classCode);
+    const c = checkLearnerCode(code);
+    const p = checkPin(pin);
+    if (!j.ok || !c.ok || !p.ok) {
+      return setErrors({
+        ...(j.ok ? {} : { classCode: j.error }),
+        ...(c.ok ? {} : { code: c.error }),
+        ...(p.ok ? {} : { pin: p.error }),
+      });
+    }
+    setErrors({});
     setBusy(true);
     try {
-      await joinClass(c.value, learnerCode);
-      onJoined();
+      await signInLearner(j.value, c.value, p.value);
+      setPin('');
+      // Keep this device's work under the same learner code as the online account.
+      if (learnerCode !== c.value) setLearnerCode(c.value);
+      onSignedIn();
     } catch (e) {
-      setError(toBackendError(e).message);
+      setErrors({ form: toBackendError(e).message });
     } finally {
       setBusy(false);
     }
@@ -90,32 +123,54 @@ function JoinForm({ learnerCode, onJoined }: { learnerCode: string; onJoined: ()
       }}
     >
       <p className="text-sm text-muted">
-        Join your teacher&apos;s class to send your results online as learner{' '}
-        <span className="num text-ink">{learnerCode}</span>. Only your learner code, quest progress
-        and assessment results are sent. Your journal and lab trials stay on this device.
+        Use the slip from your teacher. Only your learner code, quest progress and assessment
+        results are sent. Your journal and lab trials stay on this device.
       </p>
-      <div className="max-w-56">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <TextField
-          label="Class code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
+          label="Class code on your slip"
+          value={classCode}
+          onChange={(e) => setClassCode(e.target.value)}
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          error={error}
-          hint="8 letters and digits from your teacher."
+          error={errors.classCode}
+        />
+        <TextField
+          label="Learner code on your slip"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          autoComplete="username"
+          autoCapitalize="characters"
+          spellCheck={false}
+          error={errors.code}
+        />
+        <TextField
+          label="PIN on your slip"
+          type="password"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          autoComplete="current-password"
+          autoCapitalize="characters"
+          spellCheck={false}
+          error={errors.pin}
         />
       </div>
+      {errors.form ? (
+        <Callout tone="danger" role="alert" title="Not signed in">
+          {errors.form} Forgot your PIN? Your teacher can give you a new one.
+        </Callout>
+      ) : null}
       <div>
         <Button type="submit" variant="primary" disabled={busy}>
-          {busy ? 'Joining…' : 'Join class'}
+          {busy ? 'Signing in…' : 'Sign in'}
         </Button>
       </div>
     </form>
   );
 }
 
-function Joined({ learnerCode, onChanged }: { learnerCode: string; onChanged: () => void }) {
+function Joined({ learnerCode, onChanged }: { learnerCode: string | null; onChanged: () => void }) {
   const [cls, setCls] = useState<LearnerClass | null | undefined>(undefined);
   const [sync, setSync] = useState<
     | { status: 'idle' }
@@ -140,6 +195,7 @@ function Joined({ learnerCode, onChanged }: { learnerCode: string; onChanged: ()
   const runSync = async () => {
     setSync({ status: 'busy' });
     try {
+      if (!learnerCode) return;
       setSync({ status: 'done', report: await syncLearnerData(learnerCode) });
     } catch (e) {
       setSync({ status: 'error', message: toBackendError(e).message });
@@ -158,15 +214,14 @@ function Joined({ learnerCode, onChanged }: { learnerCode: string; onChanged: ()
           <span className="num">{cls.learnerCode}</span>.
         </p>
       ) : (
-        <p className="text-sm text-muted">
-          Your teacher removed you from the class. Ask for the code to join again.
-        </p>
+        <p className="text-sm text-muted">You are not in a class any more. Ask your teacher.</p>
       )}
 
       {mismatch ? (
         <Callout tone="warning" title="Different learner code">
-          This device joined the class as {cls.learnerCode}, but the learner code above is now{' '}
-          {learnerCode}. Sign out of the online class before another learner uses it.
+          You are signed in online as {cls.learnerCode}, but this device&apos;s learner code is{' '}
+          {learnerCode ?? 'not set'}. Sign out of the online class, then sign in as the right
+          learner.
         </Callout>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
@@ -218,8 +273,8 @@ function Joined({ learnerCode, onChanged }: { learnerCode: string; onChanged: ()
         </Button>
       </div>
       <p className="text-xs text-muted">
-        Signing out keeps your online results; you join again with the class code. Your work on this
-        device is never deleted by either button.
+        On a shared computer, always sign out when you finish. Signing out keeps your online
+        results. Your work on this device is never deleted by either button.
       </p>
 
       <Dialog
@@ -234,7 +289,7 @@ function Joined({ learnerCode, onChanged }: { learnerCode: string; onChanged: ()
               onClick={() => {
                 setConfirmDelete(false);
                 setActionError(null);
-                deleteMyCloudData(learnerCode).then(onChanged, (e: unknown) =>
+                deleteMyCloudData(learnerCode ?? '').then(onChanged, (e: unknown) =>
                   setActionError(toBackendError(e).message),
                 );
               }}

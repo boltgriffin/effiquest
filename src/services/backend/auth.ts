@@ -1,5 +1,6 @@
 import { BackendError, getBackend, toBackendError, unwrap } from './client';
-import { checkEmail, checkPassword } from './validation';
+import { learnerLoginId } from '../../../supabase/functions/_shared/learnerAccounts';
+import { checkEmail, checkJoinCode, checkLearnerCode, checkPassword, checkPin } from './validation';
 
 /** Who is signed in to the online class on this device (never includes tokens). */
 export interface CloudUser {
@@ -38,15 +39,31 @@ export async function signInTeacher(email: string, password: string): Promise<vo
 }
 
 /**
- * Learners never give an email or password (D-09): an anonymous Supabase account on this device,
- * linked to their pseudonymous learner code when they join a class.
+ * Learners sign in with the class code, their learner code and the PIN from the teacher's slip
+ * (decision D-20). No email or name: the login id is derived from the two codes.
  */
-export async function ensureLearnerSession(): Promise<void> {
+export async function signInLearner(
+  joinCode: string,
+  learnerCode: string,
+  pin: string,
+): Promise<void> {
+  const j = checkJoinCode(joinCode);
+  if (!j.ok) throw new BackendError('invalid', j.error);
+  const c = checkLearnerCode(learnerCode);
+  if (!c.ok) throw new BackendError('invalid', c.error);
+  const p = checkPin(pin);
+  if (!p.ok) throw new BackendError('invalid', p.error);
   const sb = await getBackend();
-  const { data } = await sb.auth.getSession();
-  if (data.session) return;
-  const { error } = await sb.auth.signInAnonymously();
-  if (error) throw toBackendError(error);
+  const { error } = await sb.auth.signInWithPassword({
+    email: learnerLoginId(j.value, c.value),
+    password: p.value,
+  });
+  if (error) {
+    throw new BackendError(
+      'auth',
+      'Sign-in failed. Check the class code, your learner code and your PIN.',
+    );
+  }
 }
 
 /** Signs out on this device only. Data saved on the device stays. */

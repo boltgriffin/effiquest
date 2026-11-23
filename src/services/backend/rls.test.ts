@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import core from '../../../supabase/migrations/20261124000001_core_schema.sql?raw';
 import functions from '../../../supabase/migrations/20261124000002_functions.sql?raw';
 import registry from '../../../supabase/migrations/20261124000003_assessment_registry.sql?raw';
+import teacherIssued from '../../../supabase/migrations/20261124000004_teacher_issued_accounts.sql?raw';
 import shim from '../../../supabase/tests/auth-shim.sql?raw';
 
 /**
@@ -31,6 +32,21 @@ async function as<T>(uid: string | null, fn: () => Promise<T>): Promise<T> {
     await db.exec('reset role');
   }
 }
+
+/** As the service role (only the manage-learners Edge Function, on the server, has it). */
+async function asService<T>(fn: () => Promise<T>): Promise<T> {
+  await db.exec('reset role');
+  await db.query(`select set_config('request.jwt.claim.sub', '', false)`);
+  await db.exec('set role service_role');
+  try {
+    return await fn();
+  } finally {
+    await db.exec('reset role');
+  }
+}
+
+const enroll = (classId: string, userId: string, code: string) =>
+  rows('select public.enroll_learner_account($1, $2, $3)', [classId, userId, code]);
 
 const rows = async (sql: string, params: unknown[] = []) => (await db.query(sql, params)).rows;
 
@@ -74,9 +90,8 @@ const submit = (a: ReturnType<typeof checkAttempt>) =>
     JSON.stringify(a.responses),
   ]);
 
-let joinCode1 = '';
-let joinCode2 = '';
 let class1 = '';
+let class2 = '';
 
 beforeAll(async () => {
   db = new PGlite();
@@ -84,6 +99,7 @@ beforeAll(async () => {
   await db.exec(core);
   await db.exec(functions);
   await db.exec(registry);
+  await db.exec(teacherIssued);
   // Sign-ups (Supabase Auth inserts into auth.users; the trigger creates empty profiles).
   for (const id of [T1, T2, L1, L2, L3, X]) {
     await db.query('insert into auth.users (id) values ($1)', [id]);
@@ -101,13 +117,11 @@ beforeAll(async () => {
     rows(`insert into public.classes (name) values ('G11 ABM B') returning id, join_code`),
   );
   class1 = (c1[0] as { id: string }).id;
-  joinCode1 = (c1[0] as { join_code: string }).join_code;
-  joinCode2 = (c2[0] as { join_code: string }).join_code;
-  await as(L1, () => rows('select * from public.join_class($1, $2)', [joinCode1, 'G11A-01']));
-  await as(L2, () =>
-    rows('select * from public.join_class($1, $2)', [joinCode1.toLowerCase(), ' g11a-02 ']),
-  );
-  await as(L3, () => rows('select * from public.join_class($1, $2)', [joinCode2, 'G11B-01']));
+  class2 = (c2[0] as { id: string }).id;
+  // Teacher-issued accounts (D-20): the Edge Function enrolls each learner with the service role.
+  await asService(() => enroll(class1, L1, 'G11A-01'));
+  await asService(() => enroll(class1, L2, ' g11a-02 '));
+  await asService(() => enroll(class2, L3, 'G11B-01'));
 }, 60_000);
 
 describe('roles cannot be supplied by the client', () => {
@@ -149,30 +163,40 @@ describe('roles cannot be supplied by the client', () => {
   });
 });
 
-describe('joining a class', () => {
-  it('normalises codes and grants only the learner role', async () => {
+describe('teacher-issued learner accounts', () => {
+  it('enrolling normalises the code and grants only the learner role', async () => {
     const p = await as(L2, () =>
       rows('select learner_code from public.profiles where id = $1', [L2]),
     );
     expect(p).toEqual([{ learner_code: 'G11A-02' }]);
+    expect(await as(L2, () => rows('select role from public.user_roles'))).toEqual([
+      { role: 'learner' },
+    ]);
   });
 
-  it('rejects a wrong class code, a malformed learner code and a teacher', async () => {
-    await expect(
-      as(X, () => rows('select * from public.join_class($1, $2)', ['00000000', 'G11A-09'])),
-    ).rejects.toThrow(/No open class/);
-    await expect(
-      as(X, () => rows('select * from public.join_class($1, $2)', [joinCode1, 'bad code!'])),
-    ).rejects.toThrow(/Learner code/);
-    await expect(
-      as(T2, () => rows('select * from public.join_class($1, $2)', [joinCode1, 'T-01'])),
-    ).rejects.toThrow(/teacher account/);
+  it('only the service role can enroll: not learners, not even teachers', async () => {
+    await expect(as(X, () => enroll(class1, X, 'G11A-09'))).rejects.toThrow(/permission denied/);
+    await expect(as(T1, () => enroll(class1, X, 'G11A-09'))).rejects.toThrow(/permission denied/);
   });
 
-  it('rejects a learner code already used by someone else in the class', async () => {
+  it('rejects a malformed code, an unknown or archived class and a duplicate code', async () => {
+    await expect(asService(() => enroll(class1, X, 'bad code!'))).rejects.toThrow(/Learner code/);
+    await expect(asService(() => enroll(uuid(), X, 'G11A-09'))).rejects.toThrow(/archived/);
+    await expect(asService(() => enroll(class1, X, 'G11A-01'))).rejects.toThrow(/already in/);
+  });
+
+  it('self-joining no longer exists', async () => {
     await expect(
-      as(X, () => rows('select * from public.join_class($1, $2)', [joinCode1, 'G11A-01'])),
-    ).rejects.toThrow(/already used/);
+      as(X, () => rows(`select * from public.join_class('AAAAAAAA', 'G11A-09')`)),
+    ).rejects.toThrow(/does not exist/);
+  });
+
+  it('owns_active_class is true only for the class teacher', async () => {
+    const owns = (uid: string) =>
+      as(uid, () => rows('select public.owns_active_class($1) as ok', [class1]));
+    expect(await owns(T1)).toEqual([{ ok: true }]);
+    expect(await owns(T2)).toEqual([{ ok: false }]);
+    expect(await owns(L1)).toEqual([{ ok: false }]);
   });
 
   it('cannot be done by writing enrollments directly', async () => {

@@ -15,5 +15,8 @@ export default defineConfig({
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // End-to-end tests never talk to a real Supabase project: blank values here take priority
+    // over .env.local, so the build under test is device-only.
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
   },
 });

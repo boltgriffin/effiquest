@@ -13,20 +13,22 @@ major_version = 17
 [auth]
 site_url = "http://localhost:5173"
 additional_redirect_urls = ["http://localhost:4173"]
-# Learners: anonymous accounts (no email, no password, no name; decision D-09).
-enable_anonymous_sign_ins = true
-# Must stay on for anonymous learner accounts. Email sign-up is off below, so teachers are created
-# by the administrator; any account still gets NO role until one is granted on the server.
-enable_signup = true
+# Decision D-20: no anonymous accounts and no self sign-up. Teacher accounts are created by the
+# administrator; learner accounts (code + PIN, no email) by the manage-learners Edge Function.
+enable_anonymous_sign_ins = false
+enable_signup = false
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 
 [auth.email]
-enable_signup = false
 enable_confirmations = false
 secure_password_change = true
 
 [auth.rate_limit]
-# Anonymous sign-ins per hour per IP (a class on one school network needs headroom).
-anonymous_users = 60
-sign_in_sign_ups = 30
+# Sign-in attempts per 5 minutes per IP. A whole class signs in from one school network, so keep
+# headroom; PIN guessing is still slowed (8 characters from 31 symbols).
+sign_in_sign_ups = 120
+
+[functions.manage-learners]
+# Supabase rejects calls without a valid user JWT before the function runs.
+verify_jwt = true

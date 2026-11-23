@@ -72,8 +72,9 @@ export default function SettingsPage() {
           description="Adds the class overview, where you import learners' results files and export the class CSV. Use it on the teacher's own device."
         />
         <p className="text-sm text-muted">
-          There are no accounts, so this switch is not a password. It only shows or hides the tools;
-          learners' data reaches this device only when files are imported.
+          This switch is not a password: it only shows or hides the tools on this device.
+          Learners&apos; data reaches it only through imported files, or through the online class
+          after you sign in with a teacher account.
         </p>
         {teacherMode ? (
           <ButtonLink to="/teacher" icon="class" className="self-start">

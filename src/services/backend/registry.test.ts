@@ -6,6 +6,7 @@ import { maxPointsOf } from '@/features/assessment/scoring';
 import core from '../../../supabase/migrations/20261124000001_core_schema.sql?raw';
 import functions from '../../../supabase/migrations/20261124000002_functions.sql?raw';
 import registry from '../../../supabase/migrations/20261124000003_assessment_registry.sql?raw';
+import teacherIssued from '../../../supabase/migrations/20261124000004_teacher_issued_accounts.sql?raw';
 import shim from '../../../supabase/tests/auth-shim.sql?raw';
 
 /** The server's assessment registry must match the app's content pack exactly. */
@@ -16,6 +17,7 @@ describe('assessment registry migration', () => {
     await db.exec(core);
     await db.exec(functions);
     await db.exec(registry);
+    await db.exec(teacherIssued);
 
     const dbAssessments = (
       await db.query<{

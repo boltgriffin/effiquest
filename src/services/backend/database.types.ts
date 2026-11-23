@@ -97,10 +97,7 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
-      join_class: {
-        Args: { p_join_code: string; p_learner_code: string };
-        Returns: Array<{ class_id: string; class_name: string }>;
-      };
+      owns_active_class: { Args: { p_class_id: string }; Returns: boolean };
       submit_attempt: {
         Args: { p_attempt: Record<string, unknown>; p_responses: Array<Record<string, unknown>> };
         Returns: boolean;

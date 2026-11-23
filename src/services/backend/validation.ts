@@ -2,6 +2,14 @@
  * Client-side input checks (pure). They give quick, clear messages; the database repeats every
  * check (constraints and SECURITY DEFINER functions), so nothing here is trusted for security.
  */
+import {
+  LEARNER_CODE_RE,
+  MAX_BATCH,
+  normalizePin,
+  PIN_ALPHABET,
+  PIN_LENGTH,
+} from '../../../supabase/functions/_shared/learnerAccounts';
+
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export function checkJoinCode(raw: string): Checked<string> {
@@ -9,6 +17,36 @@ export function checkJoinCode(raw: string): Checked<string> {
   return /^[A-F0-9]{8}$/.test(v)
     ? { ok: true, value: v }
     : { ok: false, error: 'Class code: 8 letters and digits, as given by your teacher.' };
+}
+
+export function checkLearnerCode(raw: string): Checked<string> {
+  const v = raw.trim().toUpperCase();
+  return LEARNER_CODE_RE.test(v)
+    ? { ok: true, value: v }
+    : { ok: false, error: 'Learner code: 3 to 16 letters, digits or hyphens.' };
+}
+
+/** PIN from the teacher's slip: 8 letters and digits (spaces and dashes ignored). */
+export function checkPin(raw: string): Checked<string> {
+  const v = normalizePin(raw);
+  return v.length === PIN_LENGTH && [...v].every((ch) => PIN_ALPHABET.includes(ch))
+    ? { ok: true, value: v }
+    : { ok: false, error: `PIN: the ${PIN_LENGTH} letters and digits on your slip.` };
+}
+
+/** Learner codes typed or pasted by the teacher: one per line, or separated by commas. */
+export function parseLearnerCodes(raw: string): Checked<string[]> {
+  const codes = raw
+    .split(/[\s,;]+/)
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+  if (codes.length === 0) return { ok: false, error: 'Type at least one learner code.' };
+  if (codes.length > MAX_BATCH) return { ok: false, error: `At most ${MAX_BATCH} at a time.` };
+  const bad = codes.find((c) => !LEARNER_CODE_RE.test(c));
+  if (bad) return { ok: false, error: `"${bad}": 3 to 16 letters, digits or hyphens.` };
+  const dup = codes.find((c, i) => codes.indexOf(c) !== i);
+  if (dup) return { ok: false, error: `${dup} is listed twice.` };
+  return { ok: true, value: codes };
 }
 
 export function checkEmail(raw: string): Checked<string> {

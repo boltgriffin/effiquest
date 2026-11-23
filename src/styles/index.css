@@ -255,3 +255,19 @@ dialog.eq-dialog::backdrop {
     background-image: repeating-linear-gradient(135deg, CanvasText 0 2px, transparent 2px 7px);
   }
 }
+
+/* Teacher's PIN slips (online class): print only the slips. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .pin-slips,
+  .pin-slips * {
+    visibility: visible;
+  }
+  .pin-slips {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+}

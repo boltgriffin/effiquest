@@ -2,28 +2,13 @@ import { listAttempts, listResponsesFor } from '@/services/storage/attempts';
 import { listProgress } from '@/services/storage/progress';
 import { clearSyncState, loadSyncState, saveSyncState } from '@/services/storage/syncState';
 import type { Attempt, AttemptResponse } from '@/types';
-import { ensureLearnerSession, signOut } from './auth';
-import { BackendError, getBackend, toBackendError, unwrap } from './client';
-import { checkJoinCode } from './validation';
+import { signOut } from './auth';
+import { getBackend, toBackendError, unwrap } from './client';
 
 export interface LearnerClass {
   classId: string;
   className: string;
   learnerCode: string;
-}
-
-/** Joins the teacher's class with this device's learner code. Creates an anonymous session. */
-export async function joinClass(joinCode: string, learnerCode: string): Promise<LearnerClass> {
-  const code = checkJoinCode(joinCode);
-  if (!code.ok) throw new BackendError('invalid', code.error);
-  await ensureLearnerSession();
-  const sb = await getBackend();
-  const rows = unwrap(
-    await sb.rpc('join_class', { p_join_code: code.value, p_learner_code: learnerCode }),
-  );
-  const row = rows[0];
-  if (!row) throw new BackendError('unknown');
-  return { classId: row.class_id, className: row.class_name, learnerCode };
 }
 
 /** The class this device's learner session belongs to, or null if not joined / signed out. */

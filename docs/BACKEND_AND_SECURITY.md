@@ -1,32 +1,44 @@
 # BACKEND_AND_SECURITY.md
 
-Milestone 11: an optional Supabase backend, the database, user management and security.
+Milestone 11: an optional Supabase backend, the database, user management and security. It includes decision **D-20**: teacher-issued learner accounts, a learner code plus PIN with no email.
 
 > **Status:**
 > - **Built and tested, not deployed.** No Supabase project is connected and no credentials exist in the repository.
 > - **Off by default.** The backend stays off until `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set. Without them the app works exactly as before (device-only, D-03).
-> - **Owner decision D-19.** Going live requires the privacy review in `DATABASE_PLAN.md` §7 first: school/DepEd approval, parental consent practice, data location, retention and deletion.
+> - **Owner decisions D-19 and D-20.** Going live requires the privacy review in `DATABASE_PLAN.md` §7 first: school/DepEd approval, parental consent practice, data location, retention and deletion.
 
 ## 1. What it adds
 
 | Who | Flow |
 |---|---|
-| Administrator | Creates teacher accounts and grants the teacher role in the Supabase dashboard (§6). |
-| Teacher | Teacher page → **Online class**: sign in (email + password) → create a class (name, optional school year) → share its **8-character class code** → see the roster, remove a learner, archive the class → **Load results into the overview**. That fills the existing class overview and class CSV (D-15). |
-| Learner | Settings → **Online class**: with their learner code saved, enter the class code → **Join class** (an anonymous account; no email, password or name) → **Send my results now**. Also: sign out on this device, or **Delete my online data**. |
+| Administrator | Creates teacher accounts and grants the teacher role in the Supabase dashboard (§6). Deploys the `manage-learners` Edge Function. |
+| Teacher | Teacher page → **Online class**: sign in (email + password) → create a class (name, optional school year) → **Add learners**: type or paste learner codes (no names) → the server creates one account per code with a random **8-character PIN** → **print the PIN slips** (shown once) → roster with **New PIN** and **Remove** → **Load results into the overview** fills the existing class overview and class CSV (D-15) → archive the class at the end. |
+| Learner | Settings → **Online class**: **class code + learner code + PIN** from the slip → **Send my results now**. Works on any device, including shared school PCs. **Sign out** when finished, or **Delete my online data**. A forgotten PIN is replaced by the teacher. |
 
-**What is sent:**
+### Why teacher-issued accounts (D-20)
+
+| | Learner email + password | Anonymous on device | **Code + PIN from the teacher (chosen)** |
+|---|---|---|---|
+| Personal data | emails of minors | none | **none** |
+| Shared PCs / several devices | yes | weak | **yes** |
+| Forgotten password | email reset (many learners lack email) | n/a | **the teacher issues a new PIN** |
+
+- **No email:** Supabase Auth needs an email-shaped id for password sign-in, so the id is synthetic: `g11a-07.3fa9c01b@learners.effiquest.invalid`. `.invalid` is a reserved domain, so no email can ever be sent to it, and the id holds only the two codes.
+- **PINs:** 8 characters from 31 unambiguous symbols (no 0/O or 1/I/L), about 8.5 × 10¹¹ combinations. They are generated on the server by rejection sampling, returned **once** and never stored readably (Supabase stores only a hash).
+
+### What is sent
 - Only progress events (lessons opened/completed, labs completed, quest stages, assessments submitted), plus assessment attempts and responses.
-- **Not sent:** journals and the quest reflection text (free writing), and lab trials. They stay on the device; the teacher view does not need them.
-- **Lessons, quests and questions stay in the app's content pack**, as `DATABASE_PLAN.md` §1 says. The server holds only a *registry* of each assessment's shape for validation: item ids, points, ideas. No question text and no answer keys.
+- **Not sent:** journals and the quest reflection text (free writing), and lab trials. They stay on the device.
+- **Lessons, quests and questions stay in the app's content pack** (`DATABASE_PLAN.md` §1). The server holds only a *registry* of each assessment's shape for validation: item ids, points, ideas. No question text and no answer keys.
 
 ## 2. Schema (`supabase/migrations`)
 
 | Migration | Contents |
 |---|---|
 | `…0001_core_schema.sql` | Tables, constraints, indexes, helper functions, RLS policies, grants |
-| `…0002_functions.sql` | Trusted functions: `join_class`, `submit_attempt`, `delete_my_cloud_data` |
+| `…0002_functions.sql` | Trusted functions: `submit_attempt`, `delete_my_cloud_data` (and `join_class`, removed by 0004) |
 | `…0003_assessment_registry.sql` | Registry rows for the 6 assessments (content 1.0.0-draft) |
+| `…0004_teacher_issued_accounts.sql` | D-20: drops self-joining; adds `enroll_learner_account` (**service role only**) and `owns_active_class` |
 
 | Table | Purpose | Personal data |
 |---|---|---|
@@ -39,45 +51,55 @@ Milestone 11: an optional Supabase backend, the database, user management and se
 | `progress_events` | append-only progress log | — |
 
 This matches `DATABASE_PLAN.md` §3 for identity, roles, classes, enrollments, attempts, responses and progress events, with these differences:
-- no `display_name`, `grade_level` or `locale` (not needed);
-- no content tables (content stays in the pack);
+- no `display_name`, `grade_level` or `locale`;
+- no content tables;
 - no `sim_trials`, `journal_entries` or `task_submissions` (kept on the device or not built);
 - no `admin` role: administration uses the dashboard and service role, never the app.
 
 **Constraints:**
-- codes are checked against `^[A-Z0-9-]{3,16}$`;
+- codes are checked against `^[A-Z0-9-]{3,16}$`, unique per class;
 - `score ≤ max_score` and `points ≤ max_points`;
 - `started_at ≤ submitted_at`, and events cannot be dated in the future;
 - `ref_id` must match `^[a-z0-9_:-]{1,80}$`;
 - a response is at most 2 kB;
-- a diagnostic is stored at most once per learner (partial unique index).
+- a diagnostic is stored at most once per learner.
 
 ## 3. Authorization model
 
 **Never trust a role from the client.**
 - Roles live in `user_roles`. Clients can **read their own rows only** and can **never write** them.
-- The learner role is granted only inside `join_class`. The teacher role is granted only by the administrator.
+- The **learner** role is granted only by `enroll_learner_account`, which **only the service role** may execute; in practice that is the Edge Function, after it has checked the caller (§3.1).
+- The **teacher** role is granted only by the administrator.
 - The Teacher page's "teacher tools" switch is only a display setting. Cloud access always checks the server-side role.
 
 | Table | Learner | Teacher | Signed out (`anon`) |
 |---|---|---|---|
 | profiles | own row | learners enrolled in their **active** classes | nothing |
 | user_roles | own roles (read) | own roles (read) | nothing |
-| classes | the class they joined (read) | own classes: create (only with the teacher role), rename, archive; **cannot change the code or owner** (column grants) | nothing |
-| enrollments | own (read); created only by `join_class` | own classes: read, remove a learner | nothing |
+| classes | their class (read) | own classes: create (teacher role only), rename, archive; **cannot change the code or owner** (column grants) | nothing |
+| enrollments | own (read) | own classes (read). Created and removed only through the Edge Function | nothing |
 | attempts / responses | own (read); written **only** by `submit_attempt` | learners in their active classes (read) | nothing |
-| progress_events | own: read, append (needs the learner role) | learners in their active classes (read) | nothing |
+| progress_events | own: read, append (learner role needed) | learners in their active classes (read) | nothing |
 | registry | read | read | nothing |
 
-No client can UPDATE or DELETE learner records; they are append-only. The only deletion path is `delete_my_cloud_data`.
+No client can UPDATE or DELETE learner records. The deletion paths are a learner deleting their own data (`delete_my_cloud_data`) and a teacher removing a learner (Edge Function → delete account → everything cascades).
 
 **Implementation:**
 - RLS is enabled on every table.
-- `revoke all` on all tables and functions, then minimal `grant`s per table and column. Grants and RLS are two separate layers.
-- The helper functions `has_role`, `teaches` and `is_enrolled_in` are `SECURITY DEFINER` with `search_path = ''`, so policies don't recurse.
-- Archiving a class ends the teacher's access to its learners' records (a retention lever).
+- `revoke all` on all tables and functions, then minimal `grant`s per table and column.
+- Helper functions `has_role`, `teaches`, `is_enrolled_in` and `owns_active_class` are `SECURITY DEFINER` with `search_path = ''`.
+- Archiving a class ends the teacher's access to its learners' records and blocks new accounts in it.
 
-### Server-side validation (`submit_attempt`)
+### 3.1 The `manage-learners` Edge Function (`supabase/functions`)
+The only code that holds the **service-role key**, and it holds it **only on Supabase's servers**.
+- **Entry checks:** `verify_jwt = true` means Supabase rejects calls without a valid user token. The function also refuses anonymous users.
+- **Validation:** the request body (untrusted) is validated first: action, class id, at most 60 codes in the right format, no duplicates.
+- **The caller is checked with the caller's own token, under RLS.** `owns_active_class(class)` must be true (teacher role + owner + not archived). For a PIN reset or removal, the learner must be visible to that teacher in that class. Only then does it use the service role.
+- **Creating a learner:** it creates the auth user with the synthetic id and PIN (email pre-confirmed), then calls `enroll_learner_account`. If enrollment fails, the auth user is **deleted again** (rollback), and the reason is reported per code.
+- **Responses:** the PIN is returned once. No details of internal errors leave the function or go to logs.
+- **Testing:** the logic is in `_shared/learnerAccounts.ts` (pure, no I/O) and unit-tested with fakes. `index.ts` only connects it to Supabase.
+
+### 3.2 Server-side validation of results (`submit_attempt`)
 The client computes scores (offline-first), so the server checks before writing anything:
 - the caller has the learner role;
 - the assessment exists and the content **version** matches;
@@ -88,26 +110,21 @@ The client computes scores (offline-first), so the server checks before writing 
 - the times are valid;
 - a diagnostic is accepted only once.
 
-The attempt and its responses are written in one transaction. Sending the same attempt id again is accepted without changes (safe retries). An attempt id belonging to someone else is refused.
+The attempt and its responses are written in one transaction. Sending the same id again is accepted without changes. An id belonging to someone else is refused.
 
-**Limit (documented, REC):**
+**Limit (REC):**
 - **What the server can't check:** whether an answer was *correct*. The answer keys deliberately stay out of the database, so a determined learner could forge "correct" answers through the API.
-- **Why that's acceptable:** results are formative and diagnostic, not grades (`DATABASE_PLAN.md` §5).
+- **Why that's acceptable:** results are formative and diagnostic, not grades.
 - **If grading is ever needed:** add server-graded mode, with keys in a table no client can read.
-
-### Join codes
-- 8 hex characters (about 4.3 billion values), generated by the server.
-- Requests are rate-limited by Supabase Auth and the API.
-- A code stops working when the class is archived.
-- A learner code can be used by only one account per class.
 
 ## 4. Secrets and keys
 - **Browser:** only the **anon (publishable) key** is used there. It is public by design, and RLS protects the data.
-- **Service-role key refused:** `src/config/env.ts` will not start the backend with one (a `service_role` JWT or an `sb_secret_` key). The Teacher page then shows a configuration error.
-- **Never** put a service-role key in any `VITE_` variable, the repository, CI logs or the app. It belongs only in the Supabase dashboard and CLI.
+- **Service-role key refused:** `src/config/env.ts` will not start the backend with one (a `service_role` JWT or an `sb_secret_` key).
+- **The service-role key exists only in the Edge Function's runtime environment**, which Supabase provides automatically. **Never** put it in any `VITE_` variable, the repository, CI logs or the app.
 - `.env`/`.env.*` are git-ignored except `.env.example`.
-- **Nothing sensitive is logged.** The app logs no passwords, tokens or session data, and has no `console` logging in these services. Server error text is shown only when it comes from our own functions (SQLSTATE `22023`), which are written for learners. Everything else becomes a generic message (tested).
-- **Sessions:** kept by supabase-js in `localStorage` (`effiquest-auth`) and refreshed automatically. Sign-out (`scope: 'local'`) ends the session on this device only; data saved on the device is never removed.
+- **Nothing sensitive is logged.** The app and the function log no passwords, PINs, tokens or session data. Server error text is shown only when it comes from our own functions (SQLSTATE `22023`). Everything else becomes a generic message (tested).
+- **Sessions:** kept by supabase-js in `localStorage` (`effiquest-auth`) and refreshed automatically. **Sign out** (`scope: 'local'`) ends the session on this device. The panel reminds learners to sign out on shared computers.
+- **Same learner as the device:** when a learner signs in, the device's learner code switches to theirs, so work on a shared PC stays separated per learner.
 
 ## 5. Client code
 
@@ -116,16 +133,17 @@ The attempt and its responses are written in one transaction. Sending the same a
 | `src/config/env.ts` | the only reader of `import.meta.env`; validates the URL, refuses secret keys |
 | `services/backend/client.ts` | lazy-loaded Supabase client (not in the main bundle), `BackendError`, safe error mapping |
 | `services/backend/database.types.ts` | typed schema (shape of `supabase gen types`) |
-| `services/backend/auth.ts` | current user and roles (from the server), teacher sign-in, anonymous learner session, sign-out |
-| `services/backend/learner.ts` | `joinClass`, `myClass`, `syncLearnerData`, `deleteMyCloudData` |
-| `services/backend/teacher.ts` | classes, roster, remove learner, archive, `classRecords` (paged reads) |
+| `services/backend/auth.ts` | current user and roles (from the server), teacher sign-in, **learner sign-in (class code + learner code + PIN)**, sign-out |
+| `services/backend/learner.ts` | `myClass`, `syncLearnerData`, `deleteMyCloudData` |
+| `services/backend/teacher.ts` | classes, roster, archive, **`createLearnerAccounts`, `resetLearnerPin`, `deleteLearnerAccount`** (via the Edge Function), `classRecords` (paged reads) |
 | `services/backend/validation.ts` | input checks for quick messages (the server repeats them) |
+| `supabase/functions/_shared/learnerAccounts.ts` | shared by the app and the function: login id, PIN rules, request handling |
 | `services/storage/syncState.ts` | which local records were already accepted (IndexedDB `meta`) |
-| `features/cloud/*` | the two "Online class" panels, with loading, empty, error and retry states |
+| `features/cloud/*` | the two "Online class" panels: loading, empty, error and retry states; PIN slips with a print layout |
 
 **Sync:**
 - It is manual ("Send my results now"), because school internet is unreliable.
-- Attempts go through `submit_attempt`; refused ones are reported with the reason and don't block the rest.
+- Attempts go through `submit_attempt`; refused ones are reported with the reason.
 - Events are sent in batches with `ON CONFLICT DO NOTHING`.
 - A network error stops the sync without marking anything as sent.
 - The device is always the primary copy.
@@ -134,57 +152,58 @@ The attempt and its responses are written in one transaction. Sending the same a
 
 ### Local (developer)
 1. Install Docker and the Supabase CLI.
-2. In the repo, run `supabase start`. It applies `supabase/migrations` and uses `supabase/config.toml`: anonymous sign-ins on, email sign-up off.
-3. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_ANON_KEY=` the **anon** key printed by `supabase start`.
-4. Create a teacher:
-   - Studio (`http://127.0.0.1:54323`) → Authentication → Add user (email + password).
+2. Run `supabase start`. It applies `supabase/migrations` and `supabase/config.toml`: anonymous sign-ins **off**, sign-up **off**.
+3. Run `supabase functions serve manage-learners`. The local runtime provides the URL and keys to the function.
+4. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_ANON_KEY=` the **anon** key printed by `supabase start`.
+5. Create a teacher:
+   - Studio (`http://127.0.0.1:54323`) → Authentication → Add user (email + password, auto-confirm).
    - Then in the SQL editor: `insert into public.user_roles (profile_id, role) select id, 'teacher' from auth.users where email = '…';`
-5. Run `npm run dev`.
+6. Run `npm run dev`. Sign in as the teacher on the Teacher page, create a class, add learners and print the slips. Sign in as a learner in Settings.
 
 ### Hosted project (only after the privacy review)
 1. Create the project in an approved region.
-2. **Authentication:**
-   - enable **Anonymous sign-ins** and turn on CAPTCHA protection;
-   - turn **off** "Allow new users to sign up" for **email**;
-   - set the Site URL to the app's address.
-3. Apply the migrations: `supabase link --project-ref <ref>` then `supabase db push`. Do not paste them by hand, so the history stays recorded.
-4. Add teachers as in step 4 above.
-5. Build the app with the project URL and **anon** key in the hosting provider's environment variables (never in git).
-6. Check the policies with Supabase's **Security Advisor** (RLS on every table).
+2. **Authentication:** turn **off** "Allow new users to sign up" and anonymous sign-ins. Keep the email provider **on**: teachers and the synthetic learner ids use it. Confirm-email isn't needed, because accounts are created confirmed.
+3. Apply the migrations: `supabase link --project-ref <ref>`, then `supabase db push`.
+4. Deploy the function: `supabase functions deploy manage-learners`. JWT verification is on, from `config.toml`.
+5. Add teachers as in local step 5.
+6. Build the app with the project URL and **anon** key in the hosting provider's environment variables (never in git).
+7. Check the **Security Advisor** (RLS on every table) and the **Auth rate limits** (a whole class signs in from one school IP).
 
 ## 7. Migrations, backup and recovery
 - **Migrations are append-only:**
-  - never edit an applied file; add `supabase/migrations/<timestamp>_<name>.sql`;
-  - update `database.types.ts` (`supabase gen types typescript --linked`);
+  - never edit an applied file; add `supabase/migrations/<timestamp>_<name>.sql` (0004 is an example: it removes `join_class` with a new migration);
+  - update `database.types.ts`;
   - extend `rls.test.ts`.
-- **When content changes** (the teacher approves or edits items): bump the assessment `version` in `src/content/assessments.ts` and add a migration updating the registry. `registry.test.ts` fails until the two match.
+- **When content changes:** bump the assessment `version` in `src/content/assessments.ts` and add a migration updating the registry. `registry.test.ts` fails until the two match.
 - **Backups:**
   - Supabase runs daily backups (retention depends on the plan); point-in-time recovery is an add-on.
-  - Also, before and after the pilot, export a copy: `supabase db dump --data-only -f backup-YYYY-MM-DD.sql` (and `--schema-only`). Store it encrypted where the school's privacy approval allows.
-- **Restore:** the dashboard restore, or `psql` with the dump into a fresh project, then re-apply the migrations.
+  - Also, before and after the pilot, export a copy: `supabase db dump --data-only -f backup-YYYY-MM-DD.sql` (and `--schema-only`). Store it encrypted where the privacy approval allows.
+  - Auth users (learner accounts) are in the `auth` schema. Use a full dump (`supabase db dump` with the `auth` schema) if accounts must survive a restore. Otherwise, re-issue PINs.
+- **Restore:** the dashboard restore, or `psql` with the dump into a fresh project, then re-apply the migrations and redeploy the function.
 - **Retention (to be set in the privacy review):**
   - archive classes at the end of the school year;
-  - delete learner data after the agreed period (as the administrator, delete from `profiles` for learners of archived classes; this cascades to their records);
+  - remove learner accounts after the agreed period: the teacher's **Remove**, or, as administrator, delete the auth users of archived classes (this cascades to all records);
   - learners can delete their own data at any time.
-- **The device copy remains** after any server deletion; learners can still export their results file.
+- **The device copy remains** after any server deletion.
 
 ## 8. Tests
 
 | Test | What it proves |
 |---|---|
-| `src/services/backend/rls.test.ts` (25 tests) | The **real migrations** run in **PGlite** (embedded PostgreSQL 18, no Docker) with a minimal stand-in for Supabase's `auth` schema (`supabase/tests/auth-shim.sql`, test-only). Each query runs as the `authenticated` / `anon` role with the user's JWT subject, like the Supabase API. Checks: roles can't be self-granted; non-teachers can't create classes; codes and owners can't be changed; join validation (wrong code, bad learner code, teacher joining, duplicate code); direct inserts refused; `submit_attempt` validation (sums, max, version, unknown items, inflated points, diagnostic once, idempotent); events (own only, kinds/refs/dates validated, no update/delete, role needed); visibility (learner sees own, teacher sees only enrolled learners in own active classes, `anon` sees nothing); removal ends access; self-deletion cascades; teachers can't self-delete. |
-| `registry.test.ts` | the server registry equals the app's content (ids, versions, points, ideas) |
-| `client.test.ts` | service-role keys refused; error messages are safe (no RLS details, tokens or SQL echoed); input checks |
-| `learner.test.ts` | sync sends via the validating RPC, sends no owner id, only new records, reports refusals, stops on network errors without marking records as sent |
+| `src/services/backend/rls.test.ts` (27 tests) | The **real migrations** run in **PGlite** (embedded PostgreSQL 18, no Docker) with a minimal stand-in for Supabase's `auth` schema (`supabase/tests/auth-shim.sql`, test-only). Queries run as `authenticated`, `anon` or `service_role`, with the user's JWT subject. Checks: roles can't be self-granted; **only the service role can enroll learners (not learners, not teachers)**; enroll validation (code format, unknown or archived class, duplicate code); self-joining is gone; `owns_active_class` is true only for the class teacher; direct writes are refused; `submit_attempt` validation; events (own only, validated, append-only); visibility (learner: own; teacher: only enrolled learners in own active classes; `anon`: nothing); removal ends access; self-deletion cascades. |
+| `learnerAccounts.test.ts` | Edge Function logic with fakes: synthetic login id; PIN alphabet, length and rejection sampling; untrusted request validation; accounts and PINs created per code; **nothing happens when the caller isn't the class teacher**; rollback when enrollment fails; PIN reset and removal only for the teacher's own learners. |
+| `registry.test.ts` | the server registry equals the app's content |
+| `client.test.ts` | service-role keys refused; safe error messages; input checks |
+| `learner.test.ts` | sync sends via the validating RPC, no owner id, only new records, reports refusals, stops on network errors |
 
 **Not tested here:**
-- the hosted Supabase Auth and PostgREST themselves (no project connected);
-- the stand-in reproduces only `auth.uid()` and the roles.
+- the hosted Supabase Auth, PostgREST and Edge runtime;
+- the Deno `index.ts` wiring.
 
-Before going live, run the same scenarios against `supabase start` or a staging project, and check with the Security Advisor.
+Before going live, run the flows against `supabase start` or a staging project.
 
 ## 9. Open items
-1. **Privacy review** (blocks live use): DepEd/school approval, consent, region, retention period, deletion procedure.
-2. **CAPTCHA:** decide on it for anonymous sign-ins.
-3. **Server grading:** whether it is ever needed (§3 limit).
-4. **Lost sessions:** a learner who clears browser data loses the anonymous session. The teacher removes the old enrollment, and the learner joins again; earlier synced records stay with the old account. A "transfer" feature would need an administrator-side tool.
+1. **Privacy review** (blocks live use).
+2. **Teacher accounts:** confirm teachers keep email + password, created by the administrator.
+3. **Server grading:** whether it is ever needed (§3.2 limit).
+4. **PIN slips:** decide how they are handed out and kept. Paper slips stay with the teacher, and are re-issued if lost.

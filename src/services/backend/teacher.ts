@@ -59,14 +59,48 @@ export async function roster(classId: string): Promise<RosterEntry[]> {
   );
 }
 
-export async function removeLearner(classId: string, learnerId: string): Promise<void> {
+/** Calls the `manage-learners` Edge Function (it holds the service role, on the server). */
+async function manageLearners<T>(body: Record<string, unknown>): Promise<T> {
   const sb = await getBackend();
-  const { error } = await sb
-    .from('enrollments')
-    .delete()
-    .eq('class_id', classId)
-    .eq('learner_id', learnerId);
-  if (error) throw toBackendError(error);
+  const { data, error } = await sb.functions.invoke<T>('manage-learners', { body });
+  if (error) {
+    // FunctionsHttpError carries the function's JSON { error } with a safe message.
+    const ctx = (error as { context?: unknown }).context;
+    if (ctx instanceof Response) {
+      const payload = (await ctx.json().catch(() => null)) as { error?: unknown } | null;
+      if (typeof payload?.error === 'string') {
+        throw new BackendError(ctx.status === 403 ? 'forbidden' : 'invalid', payload.error);
+      }
+    }
+    throw toBackendError(error);
+  }
+  if (data === null) throw new BackendError('unknown');
+  return data;
+}
+
+export interface IssuedPins {
+  created: Array<{ learnerCode: string; pin: string }>;
+  failed: Array<{ learnerCode: string; reason: string }>;
+}
+
+/** Creates one account per learner code. The PINs are returned ONCE: print or copy them. */
+export async function createLearnerAccounts(
+  classId: string,
+  learnerCodes: string[],
+): Promise<IssuedPins> {
+  const r = await manageLearners<Partial<IssuedPins>>({ action: 'create', classId, learnerCodes });
+  return { created: r.created ?? [], failed: r.failed ?? [] };
+}
+
+export async function resetLearnerPin(classId: string, learnerId: string): Promise<string> {
+  const r = await manageLearners<{ pin?: string }>({ action: 'reset-pin', classId, learnerId });
+  if (!r.pin) throw new BackendError('unknown');
+  return r.pin;
+}
+
+/** Deletes the learner's account and everything stored about them on the server. */
+export async function deleteLearnerAccount(classId: string, learnerId: string): Promise<void> {
+  await manageLearners({ action: 'delete', classId, learnerId });
 }
 
 /** Reads every row of a query in pages (PostgREST returns at most 1000 rows per request). */

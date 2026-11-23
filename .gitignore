@@ -12,3 +12,7 @@ test-results
 *.log
 *.tsbuildinfo
 node_modules
+
+# Supabase CLI local state (linked project, caches)
+supabase/.temp/
+supabase/.branches/

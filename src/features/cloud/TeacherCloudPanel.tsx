@@ -3,7 +3,8 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/StatePanels';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Callout } from '@/components/ui/Callout';
-import { TextField } from '@/components/ui/Field';
+import { Dialog } from '@/components/ui/Dialog';
+import { TextArea, TextField } from '@/components/ui/Field';
 import { Panel } from '@/components/ui/Panel';
 import { env } from '@/config/env';
 import { signInTeacher, signOut } from '@/services/backend/auth';
@@ -13,13 +14,17 @@ import {
   classRecords,
   createClass,
   listClasses,
-  removeLearner,
+  createLearnerAccounts,
+  deleteLearnerAccount,
+  resetLearnerPin,
   roster,
   type CloudClass,
+  type IssuedPins,
   type LearnerCloudRecords,
   type RosterEntry,
 } from '@/services/backend/teacher';
 import {
+  parseLearnerCodes,
   checkClassName,
   checkEmail,
   checkPassword,
@@ -238,6 +243,9 @@ function ClassDetail({
   const [version, setVersion] = useState(0);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  /** PINs are shown once, right after they are issued, then forgotten. */
+  const [slips, setSlips] = useState<IssuedPins | null>(null);
+  const [toDelete, setToDelete] = useState<RosterEntry | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -289,7 +297,7 @@ function ClassDetail({
           onRetry={() => setVersion((v) => v + 1)}
         />
       ) : learners.data.length === 0 ? (
-        <p className="text-sm text-muted">No learners have joined yet.</p>
+        <p className="text-sm text-muted">No learners yet. Add their learner codes below.</p>
       ) : (
         <ul
           className="divide-y divide-rule border-y border-rule"
@@ -301,24 +309,50 @@ function ClassDetail({
               className="flex flex-wrap items-center justify-between gap-2 py-2"
             >
               <span className="num">{l.learner_code}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={busy}
-                onClick={() =>
-                  void act(async () => {
-                    await removeLearner(cls.id, l.learner_id);
-                    setVersion((v) => v + 1);
-                    return `Removed ${l.learner_code} from ${cls.name}.`;
-                  })
-                }
-              >
-                Remove<span className="sr-only"> {l.learner_code}</span>
-              </Button>
+              <span className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() =>
+                    void act(async () => {
+                      const pin = await resetLearnerPin(cls.id, l.learner_id);
+                      setSlips({ created: [{ learnerCode: l.learner_code, pin }], failed: [] });
+                      return `New PIN for ${l.learner_code} below. The old PIN no longer works.`;
+                    })
+                  }
+                >
+                  New PIN<span className="sr-only"> for {l.learner_code}</span>
+                </Button>
+                <Button size="sm" variant="ghost" disabled={busy} onClick={() => setToDelete(l)}>
+                  Remove<span className="sr-only"> {l.learner_code}</span>
+                </Button>
+              </span>
             </li>
           ))}
         </ul>
       )}
+
+      <AddLearners
+        disabled={busy}
+        onAdd={(codes) =>
+          act(async () => {
+            const issued = await createLearnerAccounts(cls.id, codes);
+            setSlips(issued);
+            setVersion((v) => v + 1);
+            return `${issued.created.length} learner account${issued.created.length === 1 ? '' : 's'} created${issued.failed.length ? `, ${issued.failed.length} not created` : ''}.`;
+          })
+        }
+      />
+
+      {slips ? (
+        <PinSlips
+          joinCode={cls.join_code}
+          className={cls.name}
+          slips={slips}
+          onDone={() => setSlips(null)}
+        />
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Button
@@ -341,7 +375,7 @@ function ClassDetail({
             void act(async () => {
               await archiveClass(cls.id);
               onArchived();
-              return `${cls.name} was archived. Its code no longer works.`;
+              return `${cls.name} was archived. You can no longer add learners to it or see its results.`;
             })
           }
         >
@@ -354,6 +388,126 @@ function ClassDetail({
             {message.text}
           </Callout>
         ) : null}
+      </div>
+
+      <Dialog
+        open={toDelete !== null}
+        onClose={() => setToDelete(null)}
+        title={`Remove ${toDelete?.learner_code ?? ''}?`}
+        footer={
+          <>
+            <Button onClick={() => setToDelete(null)}>Cancel</Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                const l = toDelete;
+                setToDelete(null);
+                if (!l) return;
+                void act(async () => {
+                  await deleteLearnerAccount(cls.id, l.learner_id);
+                  setVersion((v) => v + 1);
+                  return `Removed ${l.learner_code} and their online results.`;
+                });
+              }}
+            >
+              Remove learner
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          The learner&apos;s online account and the results they sent are deleted from the server.
+          Work saved on their own device is not affected. You can add the code again later; it gets
+          a new PIN.
+        </p>
+      </Dialog>
+    </div>
+  );
+}
+
+function AddLearners({
+  disabled,
+  onAdd,
+}: {
+  disabled: boolean;
+  onAdd: (codes: string[]) => Promise<void>;
+}) {
+  const [text, setText] = useState('');
+  const [error, setError] = useState<string | undefined>();
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const parsed = parseLearnerCodes(text);
+        if (!parsed.ok) return setError(parsed.error);
+        setError(undefined);
+        void onAdd(parsed.value).then(() => setText(''));
+      }}
+    >
+      <TextArea
+        label="Add learners"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        error={error}
+        hint="Learner codes only (no names), one per line or separated by commas, e.g. G11A-01, G11A-02."
+        className="min-h-20"
+      />
+      <div>
+        <Button type="submit" disabled={disabled}>
+          Create accounts and PINs
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** One-time display of new PINs, laid out as slips to print and cut. */
+function PinSlips({
+  joinCode,
+  className,
+  slips,
+  onDone,
+}: {
+  joinCode: string;
+  className: string;
+  slips: IssuedPins;
+  onDone: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-dashed border-rule-strong p-4">
+      <Callout tone="warning" title="Print or copy these PINs now">
+        They are shown only once and are not stored anywhere readable. If a PIN is lost, give the
+        learner a new one.
+      </Callout>
+      {slips.failed.length ? (
+        <Callout tone="danger" title="Not created">
+          {slips.failed.map((f) => `${f.learnerCode}: ${f.reason}`).join(' ')}
+        </Callout>
+      ) : null}
+      <ul className="pin-slips grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="PIN slips">
+        {slips.created.map((s) => (
+          <li key={s.learnerCode} className="rounded-sm border border-rule p-3 text-sm">
+            <p className="font-medium">EffiQuest online class · {className}</p>
+            <p>
+              Class code <span className="num">{joinCode}</span>
+            </p>
+            <p>
+              Learner code <span className="num">{s.learnerCode}</span>
+            </p>
+            <p>
+              PIN <span className="num text-base tracking-widest">{s.pin}</span>
+            </p>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <Button icon="download" onClick={() => window.print()}>
+          Print slips
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          Done, hide the PINs
+        </Button>
       </div>
     </div>
   );
