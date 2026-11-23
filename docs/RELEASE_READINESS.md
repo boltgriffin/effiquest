@@ -93,11 +93,21 @@ Do this on **one low-end Android phone** and **one school PC**:
 | Offline | verified (tests) |
 | Low-end performance | measured (simulation); **real-device check open** (§5) |
 | Accessibility automated audit | done: 64 checks pass (§3) |
-| Hosting (D-16) | **Vercel** (`vercel.json` ready); deployment and account ownership open (§7) |
+| Hosting (D-16) | **live** at https://effiquest.vercel.app; account ownership open (§7) |
 | Online class | optional; **privacy review open** (`PRIVACY_REVIEW.md`); results files work without it |
 | School calendar check (D-14) | **open** |
 
 ## 7. Deploying to Vercel
+
+**Live (2026-11-23):** https://effiquest.vercel.app. Vercel project `boltgriffn/effiquest`, deployed from this computer with `npx vercel deploy --prod`; device-only (no Supabase variables).
+
+**Checked after deploying:**
+- the site is public (no login);
+- direct links to app pages work (e.g. `/learn/torque`);
+- the offline worker is served with no-cache, and the security headers are present;
+- no Supabase project reference appears in any of the 33 JavaScript files.
+
+**To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
 - **Build:** `npm ci`, then `npm run build`, output in `dist`.
