@@ -1,0 +1,12 @@
+# Never upload local settings or build output to Vercel; Vercel builds from source.
+.env
+.env.*
+!.env.example
+supabase/.temp
+supabase/.branches
+node_modules
+dist
+dev-dist
+test-results
+playwright-report
+coverage
