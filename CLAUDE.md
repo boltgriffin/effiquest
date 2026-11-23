@@ -31,13 +31,14 @@ src/
   physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle, hydraulic press) + energy ledger + shared run shape. Pure.
   scene/        R3F scenes (incline, pulley, lever, wheel & axle, hydraulic) + SceneLabel; read motion refs, never compute physics
   hooks/ store/ shared hooks; Zustand stores (view preferences only)
-  services/     storage/ (IndexedDB via idb). Only place that touches IndexedDB.
+  services/     storage/ (IndexedDB via idb; only place that touches IndexedDB) +
+                backend/ (optional Supabase: client, auth, learner sync, teacher queries; docs/BACKEND_AND_SECURITY.md)
   config/       env.ts is the only reader of import.meta.env
   types/        domain types (users, content, simulation, assessment, progress). Pure.
   utils/ styles/ test/
 ```
 
-Planned for later milestones (create only when there is real code): a Rapier adapter under `src/scene/` (only for scenes that need contact), `services/sync` (outbox, only if a cloud backend is approved). Physics status and deviations: `docs/PHYSICS_IMPLEMENTATION.md`.
+Planned for later milestones (create only when there is real code): a Rapier adapter under `src/scene/` (only for scenes that need contact). Database migrations live in `supabase/migrations` (never edit an applied migration; add a new one) and are tested in PGlite by `src/services/backend/rls.test.ts`. Physics status and deviations: `docs/PHYSICS_IMPLEMENTATION.md`.
 
 ## Design system (docs/DESIGN_SYSTEM.md, live at `/design`)
 

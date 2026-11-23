@@ -13,6 +13,7 @@ import { modules } from '@/content/modules';
 import { recentActivity, relativeTime } from '@/content/progress';
 import { labs, quests } from '@/content/quests';
 import {
+  buildLearnerExport,
   classCsv,
   downloadText,
   parseLearnerExport,
@@ -20,6 +21,9 @@ import {
   type LearnerRow,
 } from '@/features/teacher/exportFormat';
 import { sampleClass } from '@/features/teacher/sampleClass';
+import { diagnosticPercents } from '@/features/assessment/history';
+import { TeacherCloudPanel } from '@/features/cloud/TeacherCloudPanel';
+import type { LearnerCloudRecords } from '@/services/backend/teacher';
 import {
   clearClassImports,
   listClassImports,
@@ -98,6 +102,21 @@ function ClassOverview() {
     refresh();
   };
 
+  /** Online class → the same overview as imported files (one entry per learner code). */
+  const loadCloudRecords = async (records: LearnerCloudRecords[]) => {
+    for (const r of records) {
+      const baseline = diagnosticPercents(r.attempts, r.responses, 'baseline');
+      const post = diagnosticPercents(r.attempts, r.responses, 'post');
+      await saveClassImport(
+        buildLearnerExport(r.learnerCode, r.events, {
+          ...(baseline ? { baseline } : {}),
+          ...(post ? { post } : {}),
+        }),
+      );
+    }
+    refresh();
+  };
+
   if (load.status === 'loading') return <LoadingState label="Loading class results…" />;
   if (load.status === 'error') {
     return (
@@ -162,6 +181,8 @@ function ClassOverview() {
           </>
         }
       />
+
+      <TeacherCloudPanel onRecords={loadCloudRecords} />
 
       <Switch
         label="Preview with a sample class"

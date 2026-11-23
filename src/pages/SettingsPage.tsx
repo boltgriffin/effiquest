@@ -9,6 +9,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { diagnosticPercents } from '@/features/assessment/history';
+import { LearnerCloudPanel } from '@/features/cloud/LearnerCloudPanel';
 import { buildLearnerExport, downloadText } from '@/features/teacher/exportFormat';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { listAttempts, listResponsesFor } from '@/services/storage/attempts';
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   const { hash } = useLocation();
   const { quality, setQuality, theme, setTheme, setSeenWelcome } = useUiStore();
   const teacherMode = useLearnerStore((s) => s.teacherMode);
+  const currentLearner = useLearnerStore((s) => s.learnerCode);
   const setTeacherMode = useLearnerStore((s) => s.setTeacherMode);
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function SettingsPage() {
       <PageHeader eyebrow="Settings" title="Settings" />
 
       <LearnerPanel />
+      <LearnerCloudPanel learnerCode={currentLearner} />
 
       <Panel eyebrow="Display" title="Appearance" bodyClassName="flex flex-col gap-6">
         <SegmentedControl legend="Theme" value={theme} options={themeOptions} onChange={setTheme} />

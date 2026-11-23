@@ -21,6 +21,7 @@ Status: **Decided**, **Decided (pending check)** = decided but awaiting a named 
 | D-14 | Classroom implementation starts **Monday, March 1, 2027** (owner changed it on 2026-11-23; earlier dates 25 Nov and 7 Dec 2026 withdrawn). 12 weeks, to about May 21, 2027, before breaks. **Check against the school calendar** (see Schedule). | Decided (pending calendar check) |
 | D-15 | Teacher export: **CSV** with each learner's baseline and post scores per misconception (G1–G6), completed labs, and the class average change. | Decided |
 | D-18 | Pulley lab: **selectable 1-4 supporting rope segments**; **effort is measured at a steady pull**, not set by the learner (2026-11-23). | Decided |
+| D-19 | **Optional Supabase backend built (Milestone 11, owner instruction 2026-11-23: "follow what is written in milestone 11").** It is off unless a project is configured; the app stays fully usable device-only. Learners use anonymous accounts + pseudonymous learner code + teacher's class code (no email, no name, D-09 spirit kept); teachers use email + password created by the administrator; roles are granted on the server only. **Not deployed; no project connected.** Going live still requires the privacy review in DATABASE_PLAN.md section 7 (school/DepEd approval, consent, data location, retention). Supersedes D-03/D-09 only for this optional mode. New dependencies (D-17): `@supabase/supabase-js` (runtime, lazy-loaded) and `@electric-sql/pglite` (tests only). | Decided (privacy review pending before any live use) |
 | D-16 | Ownership, licence, hosting (static host and/or USB copy) and maintenance: decide before release. | Open (not needed until release) |
 | D-17 | Small extra libraries may be added only with the owner's approval, case by case. | Decided |
 
@@ -59,4 +60,4 @@ Week numbers follow the concept note's 12-week plan (SRC-T2..T7). Dates assume c
 2. **First three labs by week 5 (D-14, guided experiments):** inclined plane, lever and pulley, in that order. The baseline diagnostic is needed by week 1. Wheel and axle and hydraulic press follow.
 3. **Content drafting (D-10):** drafted lessons and items are marked "Draft - awaiting teacher review" in the app until approved.
 4. **Gamification (D-11):** the quest screens keep stage completion only; no scoring UI will be added.
-5. **Supabase (D-03):** stays uninstalled. `.env.example` placeholders remain commented out.
+5. **Supabase (D-03, updated by D-19):** installed as an optional, off-by-default backend in Milestone 11. Device-only remains the default and the fallback. See docs/BACKEND_AND_SECURITY.md.

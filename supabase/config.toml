@@ -1,0 +1,32 @@
+# Supabase CLI settings for LOCAL development only (`supabase start`). Hosted projects are
+# configured in the dashboard to the same values (docs/BACKEND_AND_SECURITY.md section 6).
+project_id = "effiquest"
+
+[api]
+# Only the public schema is exposed; RLS protects every table in it.
+schemas = ["public"]
+max_rows = 1000
+
+[db]
+major_version = 17
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:4173"]
+# Learners: anonymous accounts (no email, no password, no name; decision D-09).
+enable_anonymous_sign_ins = true
+# Must stay on for anonymous learner accounts. Email sign-up is off below, so teachers are created
+# by the administrator; any account still gets NO role until one is granted on the server.
+enable_signup = true
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+secure_password_change = true
+
+[auth.rate_limit]
+# Anonymous sign-ins per hour per IP (a class on one school network needs headroom).
+anonymous_users = 60
+sign_in_sign_ups = 30
