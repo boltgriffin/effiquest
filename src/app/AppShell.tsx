@@ -74,15 +74,17 @@ export default function AppShell() {
       <aside className="sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-rule bg-bg md:flex md:w-22 lg:w-60">
         <Link
           to="/"
-          aria-label="EffiQuest dashboard"
           className="flex h-16 shrink-0 items-center justify-center border-b border-rule px-3 lg:justify-start lg:px-5"
         >
+          {/* The visible brand is the link's name; screen readers also hear "dashboard". */}
           <span className="hidden lg:block">
             <BrandName />
           </span>
           <span className="lg:hidden">
             <BrandMark size={32} />
+            <span className="sr-only">EffiQuest</span>
           </span>
+          <span className="sr-only"> dashboard</span>
         </Link>
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 lg:p-3">
           {learnerNav.map((item) => (

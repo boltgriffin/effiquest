@@ -116,9 +116,11 @@ function DashboardBody({ events }: { events: ProgressEvent[] }) {
           title="Experiments"
           bodyClassName="grid grid-cols-1 gap-5 sm:grid-cols-2"
         >
+          {/* Mouse shortcut only: the lab list beside it is the accessible way in. */}
           <Link
             to="/lab"
-            aria-label="Open the laboratory"
+            aria-hidden="true"
+            tabIndex={-1}
             className="paper-grid block overflow-hidden rounded-md border border-rule hover:border-brand"
           >
             <InclineDiagram angleDeg={25} friction={0.25} massKg={10} className="w-full" />

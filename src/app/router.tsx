@@ -5,7 +5,6 @@ import AssessPage from '@/pages/AssessPage';
 import DiagnosticPage from '@/pages/DiagnosticPage';
 import DashboardPage from '@/pages/DashboardPage';
 import LearnPage from '@/pages/LearnPage';
-import ModulePage from '@/pages/ModulePage';
 import QuestCheckPage from '@/pages/QuestCheckPage';
 import QuestPage from '@/pages/QuestPage';
 import QuestsPage from '@/pages/QuestsPage';
@@ -13,7 +12,9 @@ import WelcomePage from '@/pages/WelcomePage';
 import AppShell from './AppShell';
 import RootLayout from './RootLayout';
 
-// Heavier screens are split out: lab (diagram + 3D), progress (charts), settings, design reference.
+// Heavier screens are split out: lesson text, lab (diagram + 3D), progress (charts), settings,
+// design reference.
+const ModulePage = lazy(() => import('@/pages/ModulePage'));
 const LabIndexPage = lazy(() => import('@/pages/LabIndexPage'));
 const MachineLabPage = lazy(() => import('@/pages/MachineLabPage'));
 const LabComparePage = lazy(() => import('@/pages/LabComparePage'));
@@ -48,7 +49,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'learn', element: <LearnPage /> },
-          { path: 'learn/:moduleId', element: <ModulePage /> },
+          { path: 'learn/:moduleId', element: lazyPage(<ModulePage />) },
           { path: 'lab', element: lazyPage(<LabIndexPage />) },
           { path: 'lab/compare', element: lazyPage(<LabComparePage />) },
           { path: 'lab/:machineId', element: lazyPage(<MachineLabPage />) },
