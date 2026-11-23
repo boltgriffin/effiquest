@@ -24,11 +24,13 @@ import { cx } from '@/utils/cx';
 const stageIcon: Record<QuestStage['kind'], IconName> = {
   lesson: 'learn',
   lab: 'lab',
+  check: 'assess',
   reflect: 'journal',
 };
 const stageKind: Record<QuestStage['kind'], string> = {
   lesson: 'Lesson',
-  lab: 'Lab activity',
+  lab: 'Simulation and experiment',
+  check: 'Knowledge check',
   reflect: 'Reflection',
 };
 
@@ -74,7 +76,12 @@ function QuestView({ quest }: { quest: Quest }) {
       {progress.status === 'ready' && p.complete ? (
         <div className="flex flex-col gap-3">
           <SuccessState title="Quest complete">
-            You finished every stage of this quest. Your answer is saved in your journal.
+            You finished every stage of this quest: the lesson, the lab, the knowledge check and
+            your answer to the quest question (saved in your journal).{' '}
+            <Link to={`/quests/${quest.id}/check`} className="text-brand underline">
+              Review your knowledge check
+            </Link>
+            .
           </SuccessState>
           {nextQuest ? (
             <ButtonLink
@@ -157,6 +164,13 @@ function QuestView({ quest }: { quest: Quest }) {
         </Panel>
 
         <aside className="flex flex-col gap-6">
+          <Panel eyebrow="Mission" title={quest.question}>
+            <p className="text-sm">
+              <span className="font-medium">Learning objective</span>{' '}
+              <span className="num text-muted">({quest.objective.source})</span>:{' '}
+              {quest.objective.text}
+            </p>
+          </Panel>
           <Panel eyebrow="The idea being tested" title={m.short}>
             <p className="font-display text-lg italic">“{m.belief}”</p>
             <p className="mt-3 text-sm text-muted">

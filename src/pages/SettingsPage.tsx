@@ -8,8 +8,10 @@ import { PageHeader, Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
+import { diagnosticPercents } from '@/features/assessment/history';
 import { buildLearnerExport, downloadText } from '@/features/teacher/exportFormat';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { listAttempts, listResponsesFor } from '@/services/storage/attempts';
 import { listProgress } from '@/services/storage/progress';
 import { normalizeLearnerCode, useLearnerStore } from '@/store/learnerStore';
 import { useUiStore, type QualityTier, type ThemePreference } from '@/store/uiStore';
@@ -133,8 +135,17 @@ function LearnerPanel() {
     if (!learnerCode) return;
     setExportError(false);
     try {
-      const events = await listProgress(learnerCode);
-      const file = buildLearnerExport(learnerCode, events);
+      const [events, attempts] = await Promise.all([
+        listProgress(learnerCode),
+        listAttempts(learnerCode),
+      ]);
+      const responses = await listResponsesFor(attempts.map((a) => a.id));
+      const baseline = diagnosticPercents(attempts, responses, 'baseline');
+      const post = diagnosticPercents(attempts, responses, 'post');
+      const file = buildLearnerExport(learnerCode, events, {
+        ...(baseline ? { baseline } : {}),
+        ...(post ? { post } : {}),
+      });
       downloadText(
         `effiquest-results-${learnerCode}.json`,
         JSON.stringify(file, null, 2),

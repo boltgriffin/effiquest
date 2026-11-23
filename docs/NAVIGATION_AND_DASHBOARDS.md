@@ -23,8 +23,10 @@ There is no authentication system, so no route protection is claimed. `/teacher`
 | `/lab/:machineId` | Lab (shared template) | `lever`, `incline`, `pulley`, `wheel-and-axle`, `hydraulic-press`; saving the Reflect step completes the lab activity; see `SIMPLE_MACHINES_LABS.md` |
 | `/lab/compare` | Compare machines | Latest trial per machine |
 | `/quests` | Quests list | Per-quest stage progress |
-| `/quests/:questId` | Quest | Breadcrumbs; stage route; reflection form at `#reflect` |
-| `/assess` | Diagnostics | Sample items only (real items pending, see §8) |
+| `/quests/:questId` | Quest | Breadcrumbs; mission and objective; 4 stages; reflection form at `#reflect` |
+| `/quests/:questId/check` | Knowledge check | Practice quiz with feedback and retries (`QUESTS_AND_ASSESSMENTS.md`) |
+| `/assess` | Diagnostics and checks | Baseline/post status, knowledge checks (draft items) |
+| `/assess/:kind` | Diagnostic | `baseline` or `post`; taken once; post after baseline |
 | `/progress` | Progress | Real completion counts + diagnostics area (sample preview) |
 | `/settings` | Settings | Learner code (`#learner`), results download, teacher mode, theme, 3D quality |
 | `/teacher` | Class overview | Teacher mode only |

@@ -2,9 +2,11 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, useRouteError } from 'react-router-dom';
 import { ErrorState, LoadingState, NotFoundState } from '@/components/StatePanels';
 import AssessPage from '@/pages/AssessPage';
+import DiagnosticPage from '@/pages/DiagnosticPage';
 import DashboardPage from '@/pages/DashboardPage';
 import LearnPage from '@/pages/LearnPage';
 import ModulePage from '@/pages/ModulePage';
+import QuestCheckPage from '@/pages/QuestCheckPage';
 import QuestPage from '@/pages/QuestPage';
 import QuestsPage from '@/pages/QuestsPage';
 import WelcomePage from '@/pages/WelcomePage';
@@ -52,7 +54,9 @@ export const router = createBrowserRouter([
           { path: 'lab/:machineId', element: lazyPage(<MachineLabPage />) },
           { path: 'quests', element: <QuestsPage /> },
           { path: 'quests/:questId', element: <QuestPage /> },
+          { path: 'quests/:questId/check', element: <QuestCheckPage /> },
           { path: 'assess', element: <AssessPage /> },
+          { path: 'assess/:kind', element: <DiagnosticPage /> },
           { path: 'progress', element: lazyPage(<ProgressPage />) },
           { path: 'settings', element: lazyPage(<SettingsPage />) },
           { path: 'design', element: lazyPage(<DesignPage />) },

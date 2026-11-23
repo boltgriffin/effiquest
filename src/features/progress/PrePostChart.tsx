@@ -5,7 +5,8 @@ export interface PrePostRow {
   id: string;
   label: string;
   baseline: number;
-  post: number;
+  /** null until the post diagnostic is taken. */
+  post: number | null;
 }
 
 const series = [
@@ -126,10 +127,11 @@ export function PrePostChart({ rows }: { rows: PrePostRow[] }) {
               {r.label}
             </th>
             <td className="num py-2 text-right">{r.baseline}%</td>
-            <td className="num py-2 text-right">{r.post}%</td>
+            <td className="num py-2 text-right">{r.post === null ? '–' : `${r.post}%`}</td>
             <td className="num py-2 text-right">
-              {r.post - r.baseline > 0 ? '+' : ''}
-              {r.post - r.baseline}
+              {r.post === null
+                ? '–'
+                : `${r.post - r.baseline > 0 ? '+' : ''}${Math.round((r.post - r.baseline) * 10) / 10}`}
             </td>
           </tr>
         ))}

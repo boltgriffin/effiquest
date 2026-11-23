@@ -18,6 +18,15 @@ describe('learner export round trip', () => {
     if (parsed.ok) expect(parsed.data.progressEvents).toHaveLength(1);
   });
 
+  it('carries lesson openings and diagnostic scores through the round trip', () => {
+    const built = buildLearnerExport('G11-07', [event('lesson_opened', 'torque', 1)], {
+      baseline: { G1: 50, G2: 100 },
+    });
+    const parsed = parseLearnerExport(JSON.stringify(built));
+    expect(parsed.ok && parsed.data.progressEvents[0]?.kind).toBe('lesson_opened');
+    expect(parsed.ok && parsed.data.diagnostics).toEqual({ baseline: { G1: 50, G2: 100 } });
+  });
+
   it('rejects non-JSON, foreign files, bad codes and damaged records', () => {
     expect(parseLearnerExport('not json').ok).toBe(false);
     expect(parseLearnerExport('{"format":"other"}').ok).toBe(false);

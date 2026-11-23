@@ -18,7 +18,7 @@ if (!quest) throw new Error('quest missing');
 describe('questProgress', () => {
   it('starts at zero with the lesson as the next stage', () => {
     const p = questProgress([], quest);
-    expect(p).toMatchObject({ done: 0, total: 3, complete: false });
+    expect(p).toMatchObject({ done: 0, total: 4, complete: false });
     expect(p.nextStage?.kind).toBe('lesson');
   });
 
@@ -28,6 +28,19 @@ describe('questProgress', () => {
       quest,
     );
     expect(p.done).toBe(2);
+    expect(p.nextStage?.kind).toBe('check');
+  });
+
+  it('counts the knowledge check once a practice attempt is submitted', () => {
+    const p = questProgress(
+      [
+        ev('lesson_completed', 'advantage-efficiency'),
+        ev('activity_completed', 'incline'),
+        ev('assessment_submitted', 'check-effort-vs-efficiency'),
+      ],
+      quest,
+    );
+    expect(p.done).toBe(3);
     expect(p.nextStage?.kind).toBe('reflect');
   });
 
@@ -36,6 +49,7 @@ describe('questProgress', () => {
       [
         ev('lesson_completed', 'advantage-efficiency'),
         ev('activity_completed', 'incline'),
+        ev('assessment_submitted', 'check-effort-vs-efficiency'),
         ev('quest_stage', 'effort-vs-efficiency:reflect'),
       ],
       quest,
@@ -58,6 +72,7 @@ describe('currentQuest', () => {
     const events = [
       ev('lesson_completed', 'torque'),
       ev('activity_completed', 'lever'),
+      ev('assessment_submitted', 'check-turning-forces'),
       ev('quest_stage', 'turning-forces:reflect'),
     ];
     expect(currentQuest(events)?.quest.id).toBe('effort-vs-efficiency');
@@ -72,6 +87,35 @@ describe('summarize and recentActivity', () => {
       ev('activity_completed', 'incline'),
     ];
     expect(summarize(events)).toMatchObject({ modulesDone: 1, labsDone: 1, questsDone: 0 });
+  });
+
+  it('counts lessons opened, checks done and every assessment attempt', () => {
+    const events = [
+      ev('lesson_opened', 'torque'),
+      ev('lesson_opened', 'torque'),
+      ev('lesson_completed', 'hydraulics'),
+      ev('assessment_submitted', 'check-turning-forces'),
+      ev('assessment_submitted', 'check-turning-forces'),
+      ev('assessment_submitted', 'diagnostic-baseline'),
+    ];
+    expect(summarize(events)).toMatchObject({
+      lessonsOpened: 2,
+      checksDone: 1,
+      checksTotal: 4,
+      assessmentAttempts: 3,
+    });
+  });
+
+  it('leaves lesson openings out of recent activity and names assessments', () => {
+    const items = recentActivity([
+      ev('lesson_opened', 'torque'),
+      ev('assessment_submitted', 'check-turning-forces'),
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      text: 'Submitted: Knowledge check: pushing straight, turning round',
+      to: '/quests/turning-forces/check',
+    });
   });
 
   it('lists newest first with destinations', () => {

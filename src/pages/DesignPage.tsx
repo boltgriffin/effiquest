@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { ItemView } from '@/components/assessment/ItemView';
 import { iconNames } from '@/components/icons/glyphs';
 import { Icon } from '@/components/icons/Icon';
 import { EmptyState, ErrorState, LoadingState, SuccessState } from '@/components/StatePanels';
@@ -16,6 +17,10 @@ import { Slider } from '@/components/ui/Slider';
 import { Switch } from '@/components/ui/Switch';
 import { Tabs } from '@/components/ui/Tabs';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { questChecks } from '@/content/assessments';
+import type { ItemResponse } from '@/types';
+
+const demoItems = questChecks.flatMap((c) => c.items).slice(0, 4);
 
 const swatches = [
   ['bg', 'Page'],
@@ -54,6 +59,7 @@ export default function DesignPage() {
   const [select, setSelect] = useState<'x' | 'y'>('x');
   const [step, setStep] = useState(1);
   const [field, setField] = useState('');
+  const [answers, setAnswers] = useState<Record<string, ItemResponse>>({});
 
   return (
     <div className="flex flex-col gap-6">
@@ -266,6 +272,25 @@ export default function DesignPage() {
         <Callout tone="danger" title="Error">
           Something failed.
         </Callout>
+      </Section>
+
+      <Section title="Assessment items">
+        <p className="text-sm text-muted">
+          ItemView shows any item kind (multiple choice, true/false, matching, numeric, reflection).
+          Examples use draft knowledge-check items; the first is shown with its answer marked.
+        </p>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {demoItems.map((item, i) => (
+            <div key={item.id} className="rounded-md border border-rule p-4">
+              <ItemView
+                item={item}
+                response={answers[item.id]}
+                onChange={(r) => setAnswers((a) => ({ ...a, [item.id]: r }))}
+                showAnswer={i === 0 && answers[item.id] !== undefined}
+              />
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section title="States">

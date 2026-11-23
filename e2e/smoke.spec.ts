@@ -96,19 +96,13 @@ test.describe('inside the app', () => {
     await expect(page.getByText('Inclined plane lab complete')).toBeVisible();
   });
 
-  test('assessment sample run reaches a scored result', async ({ page }) => {
+  test('assess page lists the diagnostics and knowledge checks, post locked', async ({ page }) => {
     await page.goto('/assess');
-    await page.getByRole('button', { name: 'Try the sample items' }).click();
-    await page
-      .getByLabel('Their efficiencies cannot be determined from these values alone.')
-      .check();
-    await page.getByRole('button', { name: 'Next item' }).click();
-    await page.getByLabel(/Your answer/).fill('74.27');
-    await page.getByRole('button', { name: 'Next item' }).click();
-    await page.getByLabel('half as large').check();
-    await page.getByRole('button', { name: 'Submit answers' }).click();
-    await expect(page.getByText('/ 3')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible();
+    await expect(page.getByText('Draft questions')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Start.*Baseline diagnostic/ })).toBeVisible();
+    await expect(page.getByText('After the baseline')).toBeVisible();
+    await page.goto('/assess/post');
+    await expect(page.getByText('Take the baseline diagnostic first')).toBeVisible();
   });
 
   test('progress shows an empty state, then a chart and table with sample data', async ({

@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
+  AssessmentDraft,
   Attempt,
   AttemptResponse,
   JournalEntry,
@@ -31,25 +32,30 @@ export interface ClassImport {
 export interface EffiQuestDB extends DBSchema {
   settings: { key: string; value: unknown };
   attempts: { key: string; value: Attempt; indexes: { byOwner: string } };
-  attempt_responses: { key: string; value: AttemptResponse };
+  attempt_responses: {
+    key: string;
+    value: AttemptResponse;
+    indexes: { byAttempt: string };
+  };
   sim_trials: { key: string; value: SimTrial; indexes: { byOwner: string } };
   journal: { key: string; value: JournalEntry; indexes: { byOwner: string } };
   progress_events: { key: string; value: ProgressEvent; indexes: { byOwner: string } };
   outbox: { key: string; value: OutboxItem };
   meta: { key: string; value: unknown };
   class_imports: { key: string; value: ClassImport };
+  assessment_drafts: { key: string; value: AssessmentDraft };
 }
 
 export type LearnerStore =
   'attempts' | 'attempt_responses' | 'sim_trials' | 'journal' | 'progress_events';
 
 export const DB_NAME = 'effiquest';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 export function openEffiQuestDb(name: string = DB_NAME): Promise<IDBPDatabase<EffiQuestDB>> {
   return openDB<EffiQuestDB>(name, DB_VERSION, {
     // One `if (oldVersion < N)` block per schema change, each covered by a test.
-    upgrade(db, oldVersion) {
+    upgrade(db, oldVersion, _newVersion, tx) {
       if (oldVersion < 1) {
         db.createObjectStore('settings');
         db.createObjectStore('attempt_responses', { keyPath: 'id' });
@@ -61,6 +67,12 @@ export function openEffiQuestDb(name: string = DB_NAME): Promise<IDBPDatabase<Ef
       }
       if (oldVersion < 2) {
         db.createObjectStore('class_imports', { keyPath: 'learnerCode' });
+      }
+      if (oldVersion < 3) {
+        // Responses are read back per attempt (results review, diagnostic summaries).
+        tx.objectStore('attempt_responses').createIndex('byAttempt', 'attemptId');
+        // Unsubmitted answers (working state, replaced on change, deleted on submission).
+        db.createObjectStore('assessment_drafts', { keyPath: 'key' });
       }
     },
   });

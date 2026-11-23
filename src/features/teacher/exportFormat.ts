@@ -3,15 +3,21 @@ import { summarize } from '@/content/progress';
 import type { LearnerExport, ProgressEvent, ProgressEventKind } from '@/types';
 
 const KINDS: readonly ProgressEventKind[] = [
+  'lesson_opened',
   'lesson_completed',
   'activity_completed',
   'quest_stage',
   'assessment_submitted',
 ];
 
+/**
+ * The learner's results file (decision D-15). `diagnostics` holds the percent per idea (G1-G6)
+ * of the first baseline and first post diagnostic, computed by the assessment feature.
+ */
 export function buildLearnerExport(
   learnerCode: string,
   progressEvents: ProgressEvent[],
+  diagnostics: LearnerExport['diagnostics'] = {},
   now: Date = new Date(),
 ): LearnerExport {
   return {
@@ -20,7 +26,7 @@ export function buildLearnerExport(
     exportedAt: now.toISOString(),
     learnerCode,
     progressEvents,
-    diagnostics: {},
+    diagnostics,
   };
 }
 

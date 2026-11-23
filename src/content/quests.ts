@@ -6,13 +6,16 @@ import type { MisconceptionId } from '@/types';
  * Decision D-11: progress only (stages marked complete); no points, unlocking or leaderboards.
  *
  * Stage completion is derived from the learner's own records:
- *  - lesson: the module is marked complete
- *  - lab: the lab activity is completed (its journal entry saved)
+ *  - lesson (concept review): the module is marked complete
+ *  - lab (simulation activity + experiment task): the lab activity is completed (journal saved)
+ *  - check (knowledge check, SRC-N2 formative quiz): a practice attempt is submitted
  *  - reflect: the learner answers the quest question on the quest page
+ * See docs/QUESTS_AND_ASSESSMENTS.md for how this maps to the milestone's quest structure.
  */
 export type QuestStage =
   | { id: string; kind: 'lesson'; title: string; moduleId: string }
   | { id: string; kind: 'lab'; title: string; labId: LabId }
+  | { id: string; kind: 'check'; title: string; assessmentId: string }
   | { id: string; kind: 'reflect'; title: string };
 
 export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic';
@@ -20,12 +23,21 @@ export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic';
 export interface Quest {
   id: string;
   title: string;
+  /** The mission: the question the learner investigates. */
   question: string;
   misconceptionId: MisconceptionId;
+  /** Concept-note objective the quest works towards (paraphrased from SRC-O1..O6). */
+  objective: { source: string; text: string };
   stages: QuestStage[];
 }
 
 const reflect: QuestStage = { id: 'reflect', kind: 'reflect', title: 'Answer the quest question' };
+const check = (assessmentId: string): QuestStage => ({
+  id: 'check',
+  kind: 'check',
+  title: 'Knowledge check',
+  assessmentId,
+});
 
 export const quests: readonly Quest[] = [
   {
@@ -33,6 +45,10 @@ export const quests: readonly Quest[] = [
     title: 'Less effort, more efficient?',
     question: 'Does a machine that makes lifting easier also waste less energy?',
     misconceptionId: 'G2',
+    objective: {
+      source: 'SRC-O2',
+      text: 'Tell mechanical advantage apart from efficiency, and recognise friction, energy loss and real-world limits.',
+    },
     stages: [
       {
         id: 'lesson',
@@ -41,6 +57,7 @@ export const quests: readonly Quest[] = [
         moduleId: 'advantage-efficiency',
       },
       { id: 'lab', kind: 'lab', title: 'Compare ramps in the lab', labId: 'incline' },
+      check('check-effort-vs-efficiency'),
       reflect,
     ],
   },
@@ -49,6 +66,10 @@ export const quests: readonly Quest[] = [
     title: 'Where does the energy go?',
     question: 'If a machine is well made, does all the input work become useful work?',
     misconceptionId: 'G4',
+    objective: {
+      source: 'SRC-O5',
+      text: 'Measure input and output forces in an experiment, calculate efficiency and analyse where energy is lost.',
+    },
     stages: [
       {
         id: 'lesson',
@@ -57,6 +78,7 @@ export const quests: readonly Quest[] = [
         moduleId: 'efficiency-practice',
       },
       { id: 'lab', kind: 'lab', title: 'Find the losses in a pulley system', labId: 'pulley' },
+      check('check-perfect-machine'),
       reflect,
     ],
   },
@@ -65,9 +87,14 @@ export const quests: readonly Quest[] = [
     title: 'Pushing straight, turning round',
     question: 'How do force and distance ideas carry over to things that rotate?',
     misconceptionId: 'G1',
+    objective: {
+      source: 'SRC-O1',
+      text: 'Apply straight-line motion formulas to turning motion (torque, angular acceleration) using analogies and problem solving.',
+    },
     stages: [
       { id: 'lesson', kind: 'lesson', title: 'Torque and rotational motion', moduleId: 'torque' },
       { id: 'lab', kind: 'lab', title: 'Feel torque with a lever', labId: 'lever' },
+      check('check-turning-forces'),
       reflect,
     ],
   },
@@ -76,6 +103,10 @@ export const quests: readonly Quest[] = [
     title: 'Pressure at work',
     question: 'How does a small push on a brake pedal stop a heavy vehicle?',
     misconceptionId: 'G6',
+    objective: {
+      source: 'SRC-O4',
+      text: "Apply Pascal's law to real systems such as brakes, lifts and excavators.",
+    },
     stages: [
       {
         id: 'lesson',
@@ -84,6 +115,7 @@ export const quests: readonly Quest[] = [
         moduleId: 'hydraulics',
       },
       { id: 'lab', kind: 'lab', title: 'Lift a load with a hydraulic press', labId: 'hydraulic' },
+      check('check-pressure-at-work'),
       reflect,
     ],
   },

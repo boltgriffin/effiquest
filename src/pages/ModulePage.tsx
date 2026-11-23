@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { EquationCard } from '@/components/EquationCard';
 import { Icon } from '@/components/icons/Icon';
@@ -10,7 +10,7 @@ import { PageHeader, Panel } from '@/components/ui/Panel';
 import { Tabs } from '@/components/ui/Tabs';
 import { getMisconception } from '@/content/misconceptions';
 import { findModule, modules, type ModuleOutline } from '@/content/modules';
-import { isModuleComplete } from '@/content/progress';
+import { isLessonOpened, isModuleComplete } from '@/content/progress';
 import { quests } from '@/content/quests';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -31,6 +31,15 @@ function ModuleView({ mod }: { mod: ModuleOutline }) {
   const relatedQuest = quests.find((q) =>
     q.stages.some((s) => s.kind === 'lesson' && s.moduleId === mod.id),
   );
+
+  // "Lessons opened" indicator: one event the first time a learner opens each module.
+  const recorded = useRef(false);
+  const { status, events, record } = progress;
+  useEffect(() => {
+    if (status !== 'ready' || recorded.current) return;
+    recorded.current = true;
+    if (!isLessonOpened(events, mod.id)) void record('lesson_opened', mod.id).catch(() => {});
+  }, [status, events, record, mod.id]);
 
   const complete = async () => {
     setSaveError(false);

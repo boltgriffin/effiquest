@@ -23,8 +23,8 @@ Before declaring work done: `typecheck`, `lint`, `test`, `build` must pass.
 src/
   app/          router, AppShell (layout, nav). Nothing imports app/.
   pages/        route-level screens; compose features and components
-  features/     vertical slices: lab/ (shared/ template + machines/ definitions; see docs/SIMPLE_MACHINES_LABS.md), assessment/, progress/, teacher/; features do not import each other
-  components/   shared UI: ui/ (design-system components), icons/, StatePanels, ErrorBoundary, EquationCard
+  features/     vertical slices: lab/ (shared/ template + machines/ definitions; see docs/SIMPLE_MACHINES_LABS.md), assessment/ (runner, scoring, results; docs/QUESTS_AND_ASSESSMENTS.md), progress/, teacher/; features do not import each other
+  components/   shared UI: ui/ (design-system components), assessment/ (ItemView), icons/, StatePanels, ErrorBoundary, EquationCard
   content/      module, quest and misconception data (source-traced; no invented lesson text) +
                 progress.ts (pure derivation of completion from the progress event log)
   edu-calc/     learner-facing calculations with structured, explained results (docs/PHYSICS_CALCULATIONS.md). Pure.

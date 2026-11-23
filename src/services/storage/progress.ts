@@ -10,7 +10,8 @@ export function onProgressChange(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
-function notify() {
+/** Tells open screens that progress or assessment records changed. */
+export function emitProgressChange(): void {
   listeners.forEach((l) => l());
 }
 
@@ -33,6 +34,6 @@ export async function recordProgress(
     createdAt: new Date().toISOString(),
   };
   await (await appDb()).put('progress_events', event);
-  notify();
+  emitProgressChange();
   return event;
 }

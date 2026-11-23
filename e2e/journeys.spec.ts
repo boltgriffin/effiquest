@@ -75,9 +75,33 @@ test('a learner completes a full quest and sees it everywhere', async ({ page })
   await page.getByRole('button', { name: 'Save and complete the lab' }).click();
   await expect(page.getByText('Inclined plane lab complete')).toBeVisible();
 
-  // Stage 3: answer the quest question.
+  // Stage 3: knowledge check (practice: feedback, one retry, then the answer).
   await page.goto('/quests/effort-vs-efficiency');
-  await expect(page.getByText('2 of 3 stages done')).toBeVisible();
+  await expect(page.getByText('2 of 4 stages done')).toBeVisible();
+  await expect(page.getByText(/Learning objective/).locator('..')).toContainText('SRC-O2');
+  await page.getByRole('link', { name: /Open.*Knowledge check/ }).click();
+  await page.getByRole('radio', { name: /True/ }).check();
+  await page.getByRole('button', { name: 'Check answer' }).click();
+  await expect(page.getByText('Not quite')).toBeVisible();
+  await page.getByRole('radio', { name: /False/ }).check();
+  // A changed answer hides the old feedback; it is checked again as a second try.
+  await page.getByRole('button', { name: 'Check answer' }).click();
+  await expect(page.getByText('Correct this time')).toBeVisible();
+  await page.getByRole('button', { name: 'Next question' }).click();
+  await page.getByLabel(/Your answer/).fill('2.4');
+  await page.getByRole('button', { name: 'Check answer' }).click();
+  await expect(page.getByText('Correct', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Next question' }).click();
+  await page.getByLabel(/Ramp A makes lifting easier/).check();
+  await page.getByRole('button', { name: 'Check answer' }).click();
+  await page.getByRole('button', { name: 'See my results' }).click();
+  // First item needed a retry, so 2 of 3 points count.
+  await expect(page.getByRole('status').filter({ hasText: '/ 3' })).toContainText('2');
+  await expect(page.getByText('Strengths and areas to improve')).toBeVisible();
+  await page.getByRole('link', { name: 'Back to the quest' }).click();
+
+  // Stage 4: answer the quest question.
+  await expect(page.getByText('3 of 4 stages done')).toBeVisible();
   await page.getByLabel('My evidence contradicts this idea').check();
   await page.getByLabel(/What evidence/).fill('Less effort did not mean less wasted energy.');
   await page.getByRole('button', { name: 'Submit answer' }).click();

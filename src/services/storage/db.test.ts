@@ -18,6 +18,7 @@ describe('openEffiQuestDb', () => {
     opened.push(db);
     expect([...db.objectStoreNames].sort()).toEqual(
       [
+        'assessment_drafts',
         'attempt_responses',
         'attempts',
         'class_imports',
@@ -73,5 +74,28 @@ describe('openEffiQuestDb', () => {
     opened.push(db);
     expect(db.objectStoreNames.contains('class_imports')).toBe(true);
     expect(await db.get('progress_events', 'old')).toMatchObject({ refId: 'torque' });
+  });
+
+  it('upgrades to version 3: responses indexed by attempt, drafts store, old rows kept', async () => {
+    const name = uniqueName();
+    const v2 = await openDB(name, 2, {
+      upgrade(db) {
+        db.createObjectStore('settings');
+        db.createObjectStore('attempt_responses', { keyPath: 'id' });
+        db.createObjectStore('outbox', { keyPath: 'id' });
+        db.createObjectStore('meta');
+        for (const store of ['attempts', 'sim_trials', 'journal', 'progress_events']) {
+          db.createObjectStore(store, { keyPath: 'id' }).createIndex('byOwner', 'ownerId');
+        }
+        db.createObjectStore('class_imports', { keyPath: 'learnerCode' });
+      },
+    });
+    await v2.put('attempt_responses', { id: 'r1', attemptId: 'a1', itemId: 'x' });
+    v2.close();
+
+    const db = await openEffiQuestDb(name);
+    opened.push(db);
+    expect(db.objectStoreNames.contains('assessment_drafts')).toBe(true);
+    expect(await db.getAllFromIndex('attempt_responses', 'byAttempt', 'a1')).toHaveLength(1);
   });
 });
