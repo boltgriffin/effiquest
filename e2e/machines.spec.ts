@@ -107,3 +107,59 @@ test.describe('lever and wheel-and-axle labs, comparison', () => {
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
   });
 });
+
+test.describe('hydraulic press lab', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'effiquest-ui',
+        JSON.stringify({
+          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          version: 0,
+        }),
+      );
+    });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+  });
+
+  test('default run: Pascal readouts, both losses, IMA = area ratio', async ({ page }) => {
+    await page.goto('/lab/hydraulic-press');
+    await expect(page.getByRole('heading', { level: 1, name: 'Hydraulic press' })).toBeVisible();
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(page.getByText('Run complete. The load has risen 0.1 m.')).toBeVisible();
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    // Hand check: P = 986 N ÷ 0.005027 m² = 196.2 kPa; F_in = P × A₁ + 5 N = 66.6 N; IMA = 16.
+    await expect(panel).toContainText('196.2');
+    await expect(panel).toContainText('66.6');
+    await expect(panel).toContainText('16.00');
+    await expect(panel.getByText('Output force from your effort (ideal)')).toBeVisible();
+    await expect(
+      page.getByRole('img', {
+        name: /friction at the piston seals.*fluid leaking past the seals/i,
+      }),
+    ).toBeVisible();
+  });
+
+  test('no seals friction and no leakage gives 100 %', async ({ page }) => {
+    await page.goto('/lab/hydraulic-press');
+    for (const name of [/Seal friction/, /Leakage/]) {
+      await page.getByRole('slider', { name }).focus();
+      await page.keyboard.press('Home');
+    }
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(
+      page.getByRole('region', { name: 'Measurements' }).getByText('100.0').first(),
+    ).toBeVisible();
+  });
+
+  test('the pressure quest now includes the hydraulic lab', async ({ page }) => {
+    await page.goto('/quests/pressure-at-work');
+    await expect(page.getByText('Lift a load with a hydraulic press').first()).toBeVisible();
+  });
+});

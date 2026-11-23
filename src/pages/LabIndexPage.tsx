@@ -10,6 +10,8 @@ import { PulleyDiagram } from '@/features/lab/pulley/PulleyDiagram';
 import { LeverDiagram } from '@/features/lab/machines/LeverDiagram';
 import { DEFAULT_LEVER_PARAMS } from '@/features/lab/machines/leverParams';
 import { WheelAxleDiagram } from '@/features/lab/machines/WheelAxleDiagram';
+import { HydraulicDiagram } from '@/features/lab/machines/HydraulicDiagram';
+import { DEFAULT_HYDRAULIC_PARAMS } from '@/features/lab/machines/hydraulicParams';
 import { DEFAULT_WHEEL_AXLE_PARAMS } from '@/features/lab/machines/wheelAxleParams';
 import { ButtonLink } from '@/components/ui/Button';
 import { useProgress } from '@/hooks/useProgress';
@@ -19,6 +21,7 @@ const previews = {
   pulley: <PulleyDiagram params={{ ...DEFAULT_PULLEY_PARAMS, segments: 3 }} className="w-full" />,
   lever: <LeverDiagram params={DEFAULT_LEVER_PARAMS} className="w-full" />,
   wheel_axle: <WheelAxleDiagram params={DEFAULT_WHEEL_AXLE_PARAMS} className="w-full" />,
+  hydraulic: <HydraulicDiagram params={DEFAULT_HYDRAULIC_PARAMS} className="w-full" />,
 };
 
 export default function LabIndexPage() {

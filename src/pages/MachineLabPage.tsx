@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { NotFoundState } from '@/components/StatePanels';
+import { hydraulicLab } from '@/features/lab/machines/hydraulic';
 import { inclineLab } from '@/features/lab/machines/incline';
 import { leverLab } from '@/features/lab/machines/lever';
 import { pulleyLab } from '@/features/lab/machines/pulley';
@@ -19,6 +20,8 @@ export default function MachineLabPage() {
       return <MachineLab key="pulley" def={pulleyLab} />;
     case 'wheel-and-axle':
       return <MachineLab key="wheel" def={wheelAxleLab} />;
+    case 'hydraulic-press':
+      return <MachineLab key="hydraulic" def={hydraulicLab} />;
     default:
       return <NotFoundState />;
   }

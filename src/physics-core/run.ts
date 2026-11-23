@@ -26,6 +26,14 @@ export interface MachineRun {
   totalOutputDistanceM: number;
   samples: MachineSample[];
   ledger: EnergyLedger;
+  /**
+   * Effort distance a loss-free machine would need for the same load rise (m). Set when the real
+   * effort distance differs from the geometry (e.g. hydraulic leakage), so the ideal mechanical
+   * advantage stays geometric instead of absorbing a loss.
+   */
+  idealInputDistanceM?: number;
+  /** Machine-specific results for the lab to show (SI units), e.g. pressure. */
+  extras?: Record<string, number>;
 }
 
 /**

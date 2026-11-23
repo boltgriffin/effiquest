@@ -28,8 +28,8 @@ src/
   content/      module, quest and misconception data (source-traced; no invented lesson text) +
                 progress.ts (pure derivation of completion from the progress event log)
   edu-calc/     learner-facing calculations with structured, explained results (docs/PHYSICS_CALCULATIONS.md). Pure.
-  physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle) + energy ledger + shared run shape. Pure.
-  scene/        R3F scenes (incline, pulley, lever, wheel & axle) + SceneLabel; read motion refs, never compute physics
+  physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle, hydraulic press) + energy ledger + shared run shape. Pure.
+  scene/        R3F scenes (incline, pulley, lever, wheel & axle, hydraulic) + SceneLabel; read motion refs, never compute physics
   hooks/ store/ shared hooks; Zustand stores (view preferences only)
   services/     storage/ (IndexedDB via idb). Only place that touches IndexedDB.
   config/       env.ts is the only reader of import.meta.env

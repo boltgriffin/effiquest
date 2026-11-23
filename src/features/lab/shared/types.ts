@@ -98,8 +98,22 @@ export interface MachineDefinition<P extends LabParams> {
   trend: { key: keyof P & string; label: string; unit: string };
   trialColumns: ReadonlyArray<{ key: keyof P & string; label: string; digits: number }>;
   guide: GuideContent;
+  /** Optional machine-specific results shown after a run (e.g. fluid pressure). */
+  extraReadouts?(p: P, run: MachineRun): ExtraReadout[];
   Diagram: ComponentType<DiagramProps<P>>;
   View3D: LazyExoticComponent<ComponentType<View3DProps<P>>>;
+}
+
+export interface ExtraReadout {
+  id: string;
+  symbol: ReactNode;
+  label: string;
+  value: number;
+  unit: string;
+  digits: number;
+  definition?: string;
+  /** "ideal" values are labelled as such so they are never mistaken for measurements. */
+  ideal?: boolean;
 }
 
 /** A preset camera position for the 3D view. */

@@ -38,6 +38,14 @@ export {
   type WheelAxleSteady,
 } from './wheelAxle';
 export {
+  areaFromDiameter,
+  simulateHydraulicLift,
+  solveHydraulic,
+  validateHydraulic,
+  type HydraulicParams,
+  type HydraulicSteady,
+} from './hydraulic';
+export {
   accelAt,
   trapezoidProfile,
   type MachineRun,

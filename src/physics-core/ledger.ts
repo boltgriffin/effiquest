@@ -3,7 +3,7 @@
  * Efficiency is computed ONLY from this ledger (docs/PHYSICS_MODEL_PLAN.md section 1):
  * η = useful work / input work × 100 %.
  */
-export type LossKind = 'friction' | 'machine-parts';
+export type LossKind = 'friction' | 'machine-parts' | 'leakage';
 
 export interface EnergyLoss {
   kind: LossKind;

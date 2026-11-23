@@ -90,8 +90,10 @@ export function measureRun<P>(
   );
   // VR is geometric, so use the exact distances: rounding a short distance (e.g. a 7 cm lever
   // arc) to the ruler would make the ideal value misleading.
+  // When losses change the effort's travel (hydraulic leakage), the machine supplies the
+  // loss-free distance so the ideal value stays geometric.
   const vr = velocityRatio({
-    inputDistanceM: last.inputDistanceM,
+    inputDistanceM: run.idealInputDistanceM ?? last.inputDistanceM,
     outputDistanceM: last.outputDistanceM,
   });
   const eta = efficiency(

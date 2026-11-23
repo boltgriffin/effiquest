@@ -15,7 +15,7 @@ export type QuestStage =
   | { id: string; kind: 'lab'; title: string; labId: LabId }
   | { id: string; kind: 'reflect'; title: string };
 
-export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle';
+export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic';
 
 export interface Quest {
   id: string;
@@ -83,6 +83,7 @@ export const quests: readonly Quest[] = [
         title: "Hydraulics and Pascal's principle",
         moduleId: 'hydraulics',
       },
+      { id: 'lab', kind: 'lab', title: 'Lift a load with a hydraulic press', labId: 'hydraulic' },
       reflect,
     ],
   },
@@ -130,10 +131,10 @@ export const labs: readonly LabInfo[] = [
 ];
 
 /**
- * Machines not built yet, shown as plain text, never as links. Hydraulic press is in the first
- * release (D-05); screw and wedge are named in the concept note (SRC-O3) and come next (D-05).
+ * Machines not built yet, shown as plain text, never as links. Screw and wedge are named in the
+ * concept note (SRC-O3) and come next (D-05).
  */
-export const plannedLabs: readonly string[] = ['Hydraulic press', 'Screw', 'Wedge'];
+export const plannedLabs: readonly string[] = ['Screw', 'Wedge'];
 
 export function findQuest(id: string | undefined): Quest | undefined {
   return quests.find((q) => q.id === id);

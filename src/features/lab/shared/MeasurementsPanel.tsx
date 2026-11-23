@@ -196,6 +196,22 @@ export function MeasurementsPanel<P extends LabParams>({
           definition="W_out ÷ W_in × 100% over the whole run. Measured, never set."
         />
 
+        {m && run && def.extraReadouts ? (
+          <div className="grid grid-cols-2 gap-x-6 border-y border-rule sm:grid-cols-3 [&>*]:border-b [&>*]:border-rule">
+            {def.extraReadouts(run.params, run.result).map((x) => (
+              <Readout
+                key={x.id}
+                symbol={x.symbol}
+                label={x.ideal ? `${x.label} (ideal)` : x.label}
+                value={v(x.value)}
+                unit={x.unit}
+                digits={x.digits}
+                definition={x.definition}
+              />
+            ))}
+          </div>
+        ) : null}
+
         {m && m.check.valid ? (
           <>
             <EnergyFlowBar inputJ={m.inputWorkJ} usefulJ={m.outputWorkJ} losses={m.losses} />

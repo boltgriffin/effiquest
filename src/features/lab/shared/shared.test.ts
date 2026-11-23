@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { simulateLeverTurn } from '@/physics-core';
 import type { SimReadouts, SimTrial } from '@/types';
 import { leverLab } from '../machines/lever';
+import { hydraulicLab } from '../machines/hydraulic';
 import { inclineLab } from '../machines/incline';
 import { pulleyLab } from '../machines/pulley';
 import { wheelAxleLab } from '../machines/wheelAxle';
@@ -47,6 +48,7 @@ describe('every machine definition runs end-to-end with its defaults', () => {
     ['pulley', pulleyLab],
     ['lever', leverLab],
     ['wheel and axle', wheelAxleLab],
+    ['hydraulic press', hydraulicLab],
   ] as const)('%s', (_, def) => {
     const p = def.defaults as Record<string, number>;
     // @ts-expect-error -- each definition has its own parameter type; defaults always fit it.
@@ -61,8 +63,13 @@ describe('every machine definition runs end-to-end with its defaults', () => {
       expect(m.ama.value).toBeLessThanOrEqual(m.vr.value + 0.05);
       expect(m.eta.value).toBeGreaterThan(0);
       expect(m.eta.value).toBeLessThan(100);
-      // η from work agrees with AMA ÷ IMA within the scale's 0.1 N resolution.
-      expect(Math.abs((m.ama.value / m.vr.value) * 100 - m.eta.value)).toBeLessThan(0.6);
+      // η = F_out·d_out ÷ (F_in·d_in) = AMA × d_out ÷ d_in, using the REAL distances (with
+      // hydraulic leakage the effort travels further than the ideal ratio), within the scale's
+      // 0.1 N resolution.
+      const last = run.samples.at(-1);
+      const amaTimesRatio =
+        m.ama.value * ((last?.outputDistanceM ?? 0) / (last?.inputDistanceM ?? 1)) * 100;
+      expect(Math.abs(amaTimesRatio - m.eta.value)).toBeLessThan(0.6);
     }
     expect(def.guide.knowledge.length).toBeGreaterThanOrEqual(3);
     for (const k of def.guide.knowledge)
@@ -76,6 +83,16 @@ describe('measurement', () => {
     const p = { loadMassKg: 10, effortArmM: 0.8, loadArmM: 0.15, pivotFriction: 0.2 };
     const m = measureRun(p, simulateLeverTurn(toLeverModel(p)), 10, 0.001);
     expect(m.vr.ok && m.vr.value).toBeCloseTo(0.8 / 0.15, 9);
+  });
+
+  it('hydraulic: IMA stays the geometric area ratio even though leakage lengthens the stroke', () => {
+    const p = hydraulicLab.defaults;
+    const run = hydraulicLab.simulate(p);
+    const m = measureRun(p, run, p.loadMassKg, hydraulicLab.rulerResolutionM);
+    expect(m.vr.ok && m.vr.value).toBeCloseTo(16, 9); // (0.08 / 0.02)²
+    const last = run.samples.at(-1);
+    expect((last?.inputDistanceM ?? 0) / (last?.outputDistanceM ?? 1)).toBeGreaterThan(16);
+    expect(m.inputForceN).toBe(66.6); // hand check: (981 + 5) N ÷ A₂ × A₁ + 5 N = 66.62 N
   });
 
   it('live reading at t = 0 and at the end', () => {

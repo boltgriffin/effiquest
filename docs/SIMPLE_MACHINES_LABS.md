@@ -12,7 +12,7 @@ Milestone 08: simple-machine laboratories on one shared template.
 | Wheel and axle | ✔ | first release | **New lab** `/lab/wheel-and-axle` |
 | Screw | ✔ | "comes next" | Not built; listed as *coming next* |
 | Wedge | ✔ | "comes next" | Not built; listed as *coming next* |
-| Hydraulic press | (SRC-O4, not a simple machine) | first release | Not part of this milestone; listed as *coming next* |
+| Hydraulic press | (SRC-O4, not a simple machine) | first release | Added in Milestone 09 on the same template: see `HYDRAULICS_LAB.md` |
 
 Screw and wedge are in the source but were deferred by the owner's D-05, so they were not built. Building them needs the owner's go-ahead (see §8).
 
