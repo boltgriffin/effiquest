@@ -191,7 +191,7 @@ export const hydraulicLab: MachineDefinition<HydraulicLabParams> = {
     'Because of leakage the small piston must travel further than A₂ ÷ A₁ times the load’s rise. The ideal mechanical advantage still uses A₂ ÷ A₁.',
     `The load starts and ends at rest and is raised ${HYDRAULIC_LIFT_M} m at a steady ${HYDRAULIC_SPEED_MPS} m/s in one long stroke (a real jack pumps many short strokes).`,
     'Pistons are light. g = 9.81 m/s². The scale reads to 0.1 N and the rulers to 1 mm.',
-    'In the pictures, piston diameters are to scale but movements are not; true distances are shown as numbers.',
+    'In the 2D diagram, piston diameters are to scale but movements are not. The 3D view is at true size and pumps the small piston in 10 cm strokes, as a real jack does; the model adds them up as one long push. True distances are shown as numbers.',
   ],
   trend: { key: 'outputDiameterM', label: 'large piston diameter', unit: 'm' },
   trialColumns: [

@@ -386,7 +386,7 @@ const simpleCompound: Lesson = {
         },
         {
           kind: 'text',
-          text: 'The lab has all six simple machines and the hydraulic press. Compound machines (such as the bicycle) come later.',
+          text: 'The lab has all six simple machines, the hydraulic press, and two compound machines: a bicycle and a hydraulic brake.',
         },
         {
           kind: 'lab',
@@ -446,6 +446,18 @@ const simpleCompound: Lesson = {
           misconceptionId: 'G3',
           evidence:
             'A compound machine is not a new kind of machine to memorize: it is simple machines in a chain. Name each part, and you can work out its advantage and efficiency from its parts.',
+        },
+        {
+          kind: 'lab',
+          labId: 'bicycle',
+          prompt:
+            'The bicycle lab follows your push through the crank, chain, sprocket, wheel and hill. Change the gear and see which machine changes.',
+        },
+        {
+          kind: 'lab',
+          labId: 'brake',
+          prompt:
+            'The hydraulic brake lab chains a lever, a hydraulic press and friction: see how the pedal force is multiplied on its way to the tyre.',
         },
         check({
           id: 'lc-1',
@@ -617,6 +629,12 @@ const hydraulics: Lesson = {
           prompt:
             'In the hydraulic press lab, set the leakage to 0 and then increase it: watch how far you must push for the same lift.',
         },
+        {
+          kind: 'lab',
+          labId: 'brake',
+          prompt:
+            'In the hydraulic brake lab, follow the force from the pedal to the pads and on to the tyre.',
+        },
       ],
     },
   ],
@@ -769,6 +787,12 @@ const efficiencyPractice: Lesson = {
             'In reality the rider does even more, because of rolling resistance and air resistance.',
           ],
           answer: { value: 10.8, unit: 'kJ' },
+        },
+        {
+          kind: 'lab',
+          labId: 'bicycle',
+          prompt:
+            'In the bicycle lab, compare a gentle and a steep hill in the same gear: look at the work, the power and the drivetrain efficiency.',
         },
         {
           kind: 'text',

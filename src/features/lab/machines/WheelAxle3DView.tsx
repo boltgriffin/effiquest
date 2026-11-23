@@ -21,6 +21,7 @@ export default function WheelAxle3DView({
         wheelRadiusM={params.wheelRadiusM}
         axleRadiusM={params.axleRadiusM}
         liftM={WHEEL_AXLE_FIXED.liftM}
+        loadMassKg={params.loadMassKg}
         motion={motion}
         playing={playing}
       />

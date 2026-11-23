@@ -11,6 +11,13 @@ describe('isWebGLAvailable', () => {
   it('is false when no context is available', () => {
     expect(isWebGLAvailable(docWith(() => null))).toBe(false);
   });
+  it('releases the test context straight away (browsers allow only a few)', () => {
+    let lost = 0;
+    const gl = { getExtension: () => ({ loseContext: () => (lost += 1) }) };
+    expect(isWebGLAvailable(docWith(() => gl))).toBe(true);
+    expect(lost).toBe(1);
+  });
+
   it('is false when context creation throws', () => {
     expect(
       isWebGLAvailable(

@@ -156,7 +156,7 @@ export const screwLab: MachineDefinition<ScrewLabParams> = {
     'The effort pushes at right angles to the handle, at its end.',
     `The load starts and ends at rest and is raised ${SCREW_FIXED.liftM * 1000} mm at a steady ${SCREW_SPEED_MPS * 1000} mm/s.`,
     'g = 9.81 m/s². The scale reads to 0.1 N and the rulers to 1 mm.',
-    'In the pictures the handle length is to scale; the rise is drawn larger than true. True values are shown as numbers.',
+    'The 2D diagram draws the rise larger than true; the 3D view is at true size (a 20 mm rise, the real thread). True values are shown as numbers.',
   ],
   trend: { key: 'pitchMm', label: 'thread pitch', unit: 'mm' },
   trialColumns: [

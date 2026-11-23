@@ -3,22 +3,27 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Curve, Vector3, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
-import { useUiStore } from '@/store/uiStore';
+import { GlovedHand } from './realism/GlovedHand';
+import { LabStage, Shadowed } from './realism/LabStage';
+import { LoadObject } from './realism/Loads';
+import { loadSize } from './realism/loadSize';
+import { useLabMaterials } from './realism/materials';
+import { useRealism } from './realism/quality';
 import { SceneLabel } from './SceneLabel';
 
 interface ScrewSceneProps {
   handleRadiusM: number;
   pitchMm: number;
+  threadRadiusM: number;
   liftM: number;
+  loadMassKg: number;
   motion: MotionRef;
   playing: boolean;
 }
 
-/** Visual scale: the screw is drawn 5× wider and its rise 5× taller than true; the handle is to scale. */
-const RISE_SCALE = 5;
-const SCREW_R = 0.06;
-const SCREW_H = 0.5;
-const BASE_TOP = 0.25;
+const BASE_H = 0.12;
+const SCREW_LEN = 0.2;
+const SADDLE = 0.24;
 
 class Helix extends Curve<Vector3> {
   constructor(
@@ -34,39 +39,39 @@ class Helix extends Curve<Vector3> {
   }
 }
 
-function useColors() {
-  const theme = useUiStore((s) => s.theme);
-  return useMemo(() => {
-    const css = getComputedStyle(document.documentElement);
-    const read = (n: string, f: string) => css.getPropertyValue(n).trim() || f;
-    return {
-      ink: read('--ink', '#1b1f1e'),
-      input: read('--input', '#2453b8'),
-      output: read('--output', '#96460a'),
-      metal: read('--rule-strong', '#857e70'),
-      surface: read('--surface-2', '#ece9e0'),
-      grid: read('--rule', '#d9d4c7'),
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
-}
-
-/** Screw jack in 3D: the handle turns the threaded screw, which rises with the load. */
-export function ScrewScene({ handleRadiusM, pitchMm, liftM, motion, playing }: ScrewSceneProps) {
-  const c = useColors();
+/**
+ * Screw jack at true size: a 12 mm square-ish thread with the real pitch (one turn per pitch of
+ * screw length), a handle of the real radius turned by a gloved hand, and a concrete block on the
+ * saddle. The load rises its true 20 mm.
+ */
+export function ScrewScene({
+  handleRadiusM,
+  pitchMm,
+  threadRadiusM,
+  liftM,
+  loadMassKg,
+  motion,
+  playing,
+}: ScrewSceneProps) {
+  const m = useLabMaterials();
+  const r = useRealism();
   const invalidate = useThree((s) => s.invalidate);
   const lift = useRef<Group>(null);
   const spin = useRef<Group>(null);
-  const turns = liftM / (pitchMm / 1000);
-  // Thread drawn with the same number of turns per drawn height as the true pitch would give
-  // (capped so it stays readable).
-  const threadTurns = Math.min(24, Math.max(6, (SCREW_H / RISE_SCALE / (pitchMm / 1000)) * 1));
-  const thread = useMemo(() => new Helix(SCREW_R, SCREW_H, threadTurns), [threadTurns]);
+  const pitch = pitchMm / 1000;
+  const turnsTotal = liftM / pitch;
+  const threadTurns = SCREW_LEN / pitch;
+  const thread = useMemo(
+    () => new Helix(threadRadiusM, SCREW_LEN, threadTurns),
+    [threadRadiusM, threadTurns],
+  );
+  const block = loadSize('steel', loadMassKg);
+  const headY = BASE_H + SCREW_LEN - 0.06;
 
   const place = () => {
     const f = motion.current.fraction;
-    lift.current?.position.set(0, f * liftM * RISE_SCALE, 0);
-    if (spin.current) spin.current.rotation.y = -2 * Math.PI * turns * f;
+    lift.current?.position.set(0, f * liftM, 0);
+    if (spin.current) spin.current.rotation.y = -2 * Math.PI * turnsTotal * f;
   };
   useFrame(() => {
     place();
@@ -76,68 +81,74 @@ export function ScrewScene({ handleRadiusM, pitchMm, liftM, motion, playing }: S
     place();
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, handleRadiusM, pitchMm, invalidate]);
+  }, [playing, handleRadiusM, pitchMm, loadMassKg, invalidate]);
 
   const R = handleRadiusM;
+  const seg = r.segments;
   return (
     <>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[2, 4, 3]} intensity={1.2} />
-      {/* Base with the nut */}
-      <mesh position={[0, BASE_TOP / 2, 0]}>
-        <cylinderGeometry args={[0.12, 0.22, BASE_TOP, 32]} />
-        <meshStandardMaterial color={c.surface} metalness={0.2} roughness={0.7} />
-      </mesh>
-      <group ref={lift}>
-        <group ref={spin}>
-          {/* Screw core and thread */}
-          <mesh position={[0, BASE_TOP - 0.15 + SCREW_H / 2, 0]}>
-            <cylinderGeometry args={[SCREW_R * 0.85, SCREW_R * 0.85, SCREW_H, 24]} />
-            <meshStandardMaterial color={c.metal} metalness={0.6} roughness={0.35} />
+      <LabStage shadowArea={0.9} lightTarget={[0, 0.3, 0]} />
+      <Shadowed>
+        {/* Cast base holding the nut */}
+        <mesh position={[0, BASE_H / 2, 0]} material={m.darkSteel}>
+          <cylinderGeometry args={[0.05, 0.11, BASE_H, seg]} />
+        </mesh>
+        <SceneLabel position={[0.16, 0.06, 0.1]}>Nut in the base</SceneLabel>
+        <group ref={lift}>
+          <group ref={spin}>
+            <mesh position={[0, BASE_H - 0.06 + SCREW_LEN / 2, 0]} material={m.steel}>
+              <cylinderGeometry args={[threadRadiusM * 0.8, threadRadiusM * 0.8, SCREW_LEN, seg]} />
+            </mesh>
+            <mesh position={[0, BASE_H - 0.06, 0]} material={m.steel}>
+              <tubeGeometry
+                args={[
+                  thread,
+                  Math.min(1200, Math.round(threadTurns * 20)),
+                  Math.max(0.0012, pitch * 0.22),
+                  6,
+                  false,
+                ]}
+              />
+            </mesh>
+            {/* Head with a cross-hole and the handle bar */}
+            <mesh position={[0, headY + 0.02, 0]} material={m.darkSteel}>
+              <cylinderGeometry args={[0.022, 0.022, 0.04, seg]} />
+            </mesh>
+            <mesh
+              position={[R / 2, headY + 0.02, 0]}
+              rotation={[0, 0, Math.PI / 2]}
+              material={m.steel}
+            >
+              <cylinderGeometry args={[0.008, 0.008, R, 12]} />
+            </mesh>
+            <mesh
+              position={[R, headY + 0.02, 0]}
+              rotation={[0, 0, Math.PI / 2]}
+              material={m.effortPaint}
+            >
+              <cylinderGeometry args={[0.012, 0.012, 0.1, 12]} />
+            </mesh>
+            <GlovedHand position={[R, headY + 0.02, 0]} rotation={[0, 0, 0]} />
+            <SceneLabel position={[R, headY + 0.13, 0]}>Effort (hand on the handle)</SceneLabel>
+          </group>
+          {/* Saddle and load (do not turn) */}
+          <mesh position={[0, headY + 0.05, 0]} material={m.framePaint}>
+            <cylinderGeometry args={[SADDLE / 2, SADDLE / 2, 0.02, seg]} />
           </mesh>
-          <mesh position={[0, BASE_TOP - 0.15, 0]}>
-            <tubeGeometry args={[thread, Math.round(threadTurns * 24), 0.012, 6, false]} />
-            <meshStandardMaterial color={c.metal} metalness={0.6} roughness={0.3} />
-          </mesh>
-          {/* Head and handle */}
-          <mesh position={[0, BASE_TOP - 0.15 + SCREW_H + 0.03, 0]}>
-            <cylinderGeometry args={[0.08, 0.08, 0.06, 24]} />
-            <meshStandardMaterial color={c.ink} />
-          </mesh>
-          <mesh
-            position={[R / 2, BASE_TOP - 0.15 + SCREW_H + 0.03, 0]}
-            rotation={[0, 0, Math.PI / 2]}
-          >
-            <cylinderGeometry args={[0.012, 0.012, R, 12]} />
-            <meshStandardMaterial color={c.input} />
-          </mesh>
-          <mesh position={[R, BASE_TOP - 0.15 + SCREW_H + 0.03, 0]}>
-            <sphereGeometry args={[0.03, 16, 12]} />
-            <meshStandardMaterial color={c.input} />
-          </mesh>
-          <SceneLabel position={[R, BASE_TOP - 0.15 + SCREW_H + 0.12, 0]}>
-            Effort (handle)
+          <group position={[0, headY + 0.06, 0]}>
+            <LoadObject kind="steel" massKg={loadMassKg} />
+          </group>
+          <SceneLabel position={[-block.w / 2 - 0.2, headY + 0.06 + block.h / 2, 0]}>
+            {`Steel billet, ${loadMassKg} kg (load)`}
           </SceneLabel>
         </group>
-        {/* Platform and load (do not spin) */}
-        <mesh position={[0, BASE_TOP - 0.15 + SCREW_H + 0.07, 0]}>
-          <boxGeometry args={[0.32, 0.02, 0.32]} />
-          <meshStandardMaterial color={c.ink} />
-        </mesh>
-        <mesh position={[0, BASE_TOP - 0.15 + SCREW_H + 0.2, 0]}>
-          <boxGeometry args={[0.3, 0.24, 0.3]} />
-          <meshStandardMaterial color={c.output} roughness={0.7} />
-        </mesh>
-        <SceneLabel position={[-0.32, BASE_TOP - 0.15 + SCREW_H + 0.2, 0]}>Load</SceneLabel>
-      </group>
-      <SceneLabel position={[0.32, 0.12, 0.1]}>Nut in the base</SceneLabel>
-      <gridHelper args={[4, 16, c.grid, c.grid]} />
+      </Shadowed>
       <OrbitControls
         makeDefault
-        target={[0, 0.6, 0]}
+        target={[0, 0.3, 0]}
         enablePan={false}
-        minDistance={0.8}
-        maxDistance={5}
+        minDistance={0.25}
+        maxDistance={4}
         maxPolarAngle={Math.PI / 2.05}
       />
     </>

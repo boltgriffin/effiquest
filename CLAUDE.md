@@ -28,8 +28,10 @@ src/
   content/      module, quest and misconception data (source-traced; no invented lesson text) +
                 progress.ts (pure derivation of completion from the progress event log)
   edu-calc/     learner-facing calculations with structured, explained results (docs/PHYSICS_CALCULATIONS.md). Pure.
-  physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle, hydraulic press) + energy ledger + shared run shape. Pure.
-  scene/        R3F scenes (incline, pulley, lever, wheel & axle, hydraulic) + SceneLabel; read motion refs, never compute physics
+  physics-core/ deterministic machine models (incline, lever, pulley, wheel & axle, hydraulic press, screw, wedge; compound: bicycle, brake) + energy ledger + shared run shape. Pure.
+  scene/        R3F scenes (all nine labs) at true size + SceneLabel;
+                realism/ (materials, generated textures, stage, rope, hand, loads; docs/REALISTIC_3D.md).
+                Scenes read motion refs and never compute physics; no downloaded models or textures
   hooks/ store/ shared hooks; Zustand stores (view preferences only)
   services/     storage/ (IndexedDB via idb; only place that touches IndexedDB) +
                 backend/ (optional Supabase: client, auth, learner sync, teacher queries; docs/BACKEND_AND_SECURITY.md)

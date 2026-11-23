@@ -12,6 +12,8 @@ const routes = [
   '/lab/hydraulic-press',
   '/lab/screw',
   '/lab/wedge',
+  '/lab/bicycle',
+  '/lab/hydraulic-brake',
   '/lab/compare',
   '/quests',
   '/quests/effort-vs-efficiency',

@@ -83,6 +83,11 @@ export interface MachineDefinition<P extends LabParams> {
   validate(p: P): Validation;
   simulate(p: P): MachineRun;
   loadMassKg(p: P): number;
+  /**
+   * How the output force is shown when it is not a weight (e.g. a brake's clamp force).
+   * `loadMassKg` then returns that force ÷ g so the shared measurement code still applies.
+   */
+  outputForce?: { symbol: ReactNode; label: string; definition: string };
   /** Ruler resolution for this apparatus (m). */
   rulerResolutionM: number;
   labels: {

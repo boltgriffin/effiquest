@@ -25,6 +25,7 @@ export default function Incline3DView({
       <InclineScene
         angleDeg={params.angleDeg}
         lengthM={RAMP_LENGTH_M}
+        massKg={params.massKg}
         motion={motion}
         playing={playing}
       />

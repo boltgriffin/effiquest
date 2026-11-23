@@ -3,6 +3,8 @@ import { simulateLeverTurn } from '@/physics-core';
 import type { SimReadouts, SimTrial } from '@/types';
 import { leverLab } from '../machines/lever';
 import { hydraulicLab } from '../machines/hydraulic';
+import { bicycleLab } from '../machines/bicycle';
+import { brakeLab } from '../machines/brake';
 import { screwLab } from '../machines/screw';
 import { wedgeLab } from '../machines/wedge';
 import { inclineLab } from '../machines/incline';
@@ -53,6 +55,8 @@ describe('every machine definition runs end-to-end with its defaults', () => {
     ['hydraulic press', hydraulicLab],
     ['screw jack', screwLab],
     ['wedge', wedgeLab],
+    ['bicycle', bicycleLab],
+    ['hydraulic brake', brakeLab],
   ] as const)('%s', (_, def) => {
     const p = def.defaults as Record<string, number>;
     // @ts-expect-error -- each definition has its own parameter type; defaults always fit it.

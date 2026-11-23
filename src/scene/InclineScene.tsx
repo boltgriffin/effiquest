@@ -1,72 +1,67 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Line, OrbitControls } from '@react-three/drei';
-import { ExtrudeGeometry, Shape, type Group } from 'three';
+import { OrbitControls } from '@react-three/drei';
+import { Vector3, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
+import { GlovedHand } from './realism/GlovedHand';
+import { LabStage, Shadowed } from './realism/LabStage';
+import { LoadObject } from './realism/Loads';
+import { loadSize } from './realism/loadSize';
+import { useLabMaterials } from './realism/materials';
+import { Rope } from './realism/Rope';
 import { SceneLabel } from './SceneLabel';
-import { useUiStore } from '@/store/uiStore';
 
 interface InclineSceneProps {
   angleDeg: number;
   lengthM: number;
+  massKg: number;
   motion: MotionRef;
   playing: boolean;
 }
 
-const BLOCK = { length: 0.3, height: 0.18, depth: 0.25 };
-const DEPTH = 0.7;
-
-/** Reads a design token so 3D colors follow the light/dark theme. */
-function useTokenColors() {
-  const theme = useUiStore((s) => s.theme);
-  return useMemo(() => {
-    const css = getComputedStyle(document.documentElement);
-    const read = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
-    return {
-      ramp: read('--surface-2', '#ece9e0'),
-      edge: read('--ink', '#1b1f1e'),
-      block: read('--brand', '#0b6e66'),
-      input: read('--input', '#2453b8'),
-      ground: read('--rule-strong', '#857e70'),
-    };
-    // Re-read when the user switches theme.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
-}
+const PLANK_W = 0.6;
+const PLANK_T = 0.035;
+/** Rope from the crate to the hand, along the slope. */
+const ROPE_LEN = 0.55;
 
 /**
- * Inclined plane in metres: the ramp surface is `lengthM` long at `angleDeg`. The block follows
- * the shared run motion; nothing here computes physics.
+ * Inclined plane at true size: a wooden plank ramp `lengthM` long at `angleDeg`, resting on a
+ * steel stand, with a crate sized from the load mass. The crate follows the shared run motion;
+ * nothing here computes physics.
  */
-export function InclineScene({ angleDeg, lengthM, motion, playing }: InclineSceneProps) {
-  const colors = useTokenColors();
-  const block = useRef<Group>(null);
+export function InclineScene({ angleDeg, lengthM, massKg, motion, playing }: InclineSceneProps) {
+  const m = useLabMaterials();
+  const crate = useRef<Group>(null);
+  const hand = useRef<Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const t = (angleDeg * Math.PI) / 180;
   const base = lengthM * Math.cos(t);
   const height = lengthM * Math.sin(t);
+  const size = loadSize('crate', massKg);
 
-  const geometry = useMemo(() => {
-    const shape = new Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(base, 0);
-    shape.lineTo(base, height);
-    shape.closePath();
-    const g = new ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: false });
-    g.translate(0, 0, -DEPTH / 2);
-    return g;
-  }, [base, height]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  // Points along the slope surface (local to the ramp group).
+  const along = (s: number, up = 0) =>
+    new Vector3(s * Math.cos(t) - up * Math.sin(t), s * Math.sin(t) + up * Math.cos(t), 0);
+  const ropeA = useMemo(() => new Vector3(), []);
+  const ropeB = useMemo(() => new Vector3(), []);
 
+  const crateS = () =>
+    size.w / 2 + motion.current.fraction * Math.max(0, lengthM - size.w - ROPE_LEN * 0.2);
   const place = () => {
-    const g = block.current;
-    if (!g) return;
-    const s = BLOCK.length / 2 + motion.current.fraction * (lengthM - BLOCK.length);
-    g.position.set(s * Math.cos(t), s * Math.sin(t), 0);
-    g.rotation.set(0, 0, t);
+    const s = crateS();
+    crate.current?.position.copy(along(s));
+    crate.current?.rotation.set(0, 0, t);
+    const front = s + size.w / 2;
+    hand.current?.position.copy(along(front + ROPE_LEN, size.h * 0.45));
+    hand.current?.rotation.set(0, 0, t);
+  };
+  const ropeEnds = (): [Vector3, Vector3] => {
+    const front = crateS() + size.w / 2;
+    ropeA.copy(along(front, size.h * 0.45));
+    ropeB.copy(along(front + ROPE_LEN, size.h * 0.45));
+    return [ropeA, ropeB];
   };
 
-  // Render on demand: keep requesting frames only while a run plays.
   useFrame(() => {
     place();
     if (motion.current.playing) invalidate();
@@ -75,45 +70,54 @@ export function InclineScene({ angleDeg, lengthM, motion, playing }: InclineScen
     place();
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, angleDeg, lengthM, invalidate]);
+  }, [playing, angleDeg, lengthM, massKg, invalidate]);
 
+  const mid = along(lengthM / 2, -PLANK_T / 2);
   return (
     <>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[2, 4, 3]} intensity={1.4} />
-      <group position={[-base / 2, 0, 0]}>
-        <mesh geometry={geometry}>
-          <meshStandardMaterial color={colors.ramp} roughness={0.9} />
-        </mesh>
-        <SceneLabel position={[base * 0.75, height * 0.2, DEPTH / 2 + 0.05]}>Ramp</SceneLabel>
-        <lineSegments>
-          <edgesGeometry args={[geometry]} />
-          <lineBasicMaterial color={colors.edge} />
-        </lineSegments>
-        <group ref={block}>
-          <mesh position={[0, BLOCK.height / 2, 0]}>
-            <boxGeometry args={[BLOCK.length, BLOCK.height, BLOCK.depth]} />
-            <meshStandardMaterial color={colors.block} roughness={0.6} />
+      <LabStage shadowArea={Math.max(1.2, lengthM)} lightTarget={[0, height / 2, 0]} />
+      <Shadowed>
+        <group position={[-base / 2, 0, 0]}>
+          {/* Plank: its top surface is the ramp line from (0,0) to (base, height) */}
+          <mesh position={[mid.x, mid.y, 0]} rotation={[0, 0, t]} material={m.wood}>
+            <boxGeometry args={[lengthM, PLANK_T, PLANK_W]} />
           </mesh>
-          <SceneLabel position={[0, BLOCK.height + 0.14, 0]}>Block (load)</SceneLabel>
-          <SceneLabel position={[BLOCK.length / 2 + 0.55, BLOCK.height / 2, 0]}>Effort</SceneLabel>
-          {/* Effort rope, pulled up the slope */}
-          <Line
-            points={[
-              [BLOCK.length / 2, BLOCK.height / 2, 0],
-              [BLOCK.length / 2 + 0.45, BLOCK.height / 2, 0],
-            ]}
-            color={colors.input}
-            lineWidth={3}
-          />
+          {/* Steel stand under the top end */}
+          {[-1, 1].map((z) => (
+            <mesh
+              key={z}
+              position={[base - 0.03, (height - PLANK_T) / 2, (z * (PLANK_W - 0.08)) / 2]}
+              material={m.darkSteel}
+            >
+              <boxGeometry args={[0.04, Math.max(0.01, height - PLANK_T), 0.04]} />
+            </mesh>
+          ))}
+          <mesh
+            position={[base - 0.03, Math.max(0.02, height - PLANK_T - 0.02), 0]}
+            material={m.darkSteel}
+          >
+            <boxGeometry args={[0.05, 0.04, PLANK_W]} />
+          </mesh>
+          <SceneLabel position={[base * 0.7, height * 0.35 + 0.12, PLANK_W / 2 + 0.05]}>
+            Ramp
+          </SceneLabel>
+
+          <group ref={crate}>
+            <LoadObject kind="crate" massKg={massKg} />
+            <SceneLabel position={[0, size.h + 0.12, 0]}>{`Crate, ${massKg} kg (load)`}</SceneLabel>
+          </group>
+          <Rope ends={ropeEnds} />
+          <group ref={hand}>
+            <GlovedHand rotation={[Math.PI / 2, 0, 0]} />
+            <SceneLabel position={[0.12, 0.14, 0]}>Effort</SceneLabel>
+          </group>
         </group>
-      </group>
-      <gridHelper args={[6, 12, colors.ground, colors.ground]} position={[0, -0.001, 0]} />
+      </Shadowed>
       <OrbitControls
         makeDefault
         target={[0, height / 2, 0]}
         enablePan={false}
-        minDistance={1.5}
+        minDistance={0.6}
         maxDistance={8}
         maxPolarAngle={Math.PI / 2.05}
       />

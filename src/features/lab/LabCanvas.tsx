@@ -79,6 +79,7 @@ export default function LabCanvas({
           key={generation}
           dpr={DPR[quality]}
           frameloop="demand"
+          shadows={quality !== 'low'}
           camera={{ position: views[0]?.position ?? [3, 2.5, 4], fov: 45 }}
           aria-label={label}
           onCreated={({ gl }) => {

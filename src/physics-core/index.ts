@@ -83,5 +83,24 @@ export {
   type WedgeSteady,
 } from './wedge';
 
+export {
+  DEFAULT_BICYCLE,
+  simulateBicycleClimb,
+  solveBicycle,
+  sprocketRadius,
+  validateBicycle,
+  type BicycleParams,
+  type BicycleSteady,
+} from './bicycle';
+export {
+  clampForceAsMassKg,
+  DEFAULT_BRAKE,
+  simulateBrakeApply,
+  solveBrake,
+  validateBrake,
+  type BrakeParams,
+  type BrakeSteady,
+} from './brake';
+
 /** Bumped whenever a model changes, and stored with each recorded trial. */
-export const ENGINE_VERSION = 'physics-core@1.1.0';
+export const ENGINE_VERSION = 'physics-core@1.2.0';

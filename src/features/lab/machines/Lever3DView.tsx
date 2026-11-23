@@ -1,7 +1,7 @@
 import { LeverScene } from '@/scene/LeverScene';
 import LabCanvas from '../LabCanvas';
 import type { CameraView, View3DProps } from '../shared/types';
-import { LEVER_ROTATION_DEG, type LeverLabParams } from './leverParams';
+import { LEVER_PIN_RADIUS_M, LEVER_ROTATION_DEG, type LeverLabParams } from './leverParams';
 
 const VIEWS: CameraView[] = [
   { id: 'front', label: 'Front', position: [0, 0.8, 2.4], target: [0, 0.5, 0] },
@@ -17,6 +17,8 @@ export default function Lever3DView({ params, motion, playing }: View3DProps<Lev
         effortArmM={params.effortArmM}
         loadArmM={params.loadArmM}
         rotationDeg={LEVER_ROTATION_DEG}
+        loadMassKg={params.loadMassKg}
+        pinRadiusM={LEVER_PIN_RADIUS_M}
         motion={motion}
         playing={playing}
       />

@@ -3,64 +3,51 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Shape, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
-import { useUiStore } from '@/store/uiStore';
+import { GlovedHand } from './realism/GlovedHand';
+import { LabStage, Shadowed } from './realism/LabStage';
+import { LoadObject } from './realism/Loads';
+import { loadSize } from './realism/loadSize';
+import { useLabMaterials } from './realism/materials';
 import { SceneLabel } from './SceneLabel';
 
 interface WedgeSceneProps {
   wedgeAngleDeg: number;
   pushM: number;
+  loadMassKg: number;
   motion: MotionRef;
   playing: boolean;
 }
 
-/** Drawn 2× true size so the wedge reads clearly; the geometry (angle, push, rise) is exact. */
-const SCALE = 2;
 const LEN = 0.45;
-const START = 0.12; // tip already past the load at the start
-const DEPTH = 0.3;
-const LOAD_W = 0.17;
-const LOAD_H = 0.12;
+const DEPTH = 0.2;
 
-function useColors() {
-  const theme = useUiStore((s) => s.theme);
-  return useMemo(() => {
-    const css = getComputedStyle(document.documentElement);
-    const read = (n: string, f: string) => css.getPropertyValue(n).trim() || f;
-    return {
-      input: read('--input', '#2453b8'),
-      output: read('--output', '#96460a'),
-      surface: read('--surface-2', '#ece9e0'),
-      guide: read('--rule-strong', '#857e70'),
-      grid: read('--rule', '#d9d4c7'),
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]);
-}
-
-/** Lifting wedge in 3D: the wedge slides along the floor under a load held by two guides. */
-export function WedgeScene({ wedgeAngleDeg, pushM, motion, playing }: WedgeSceneProps) {
-  const c = useColors();
+/**
+ * Lifting wedge at true size: a hardwood wedge slides along the floor under a concrete block held
+ * by guides behind it. The flat-bottomed block rests on the slope by its uphill edge.
+ */
+export function WedgeScene({ wedgeAngleDeg, pushM, loadMassKg, motion, playing }: WedgeSceneProps) {
+  const m = useLabMaterials();
   const invalidate = useThree((s) => s.invalidate);
   const wedge = useRef<Group>(null);
   const load = useRef<Group>(null);
   const tan = Math.tan((wedgeAngleDeg * Math.PI) / 180);
+  const block = loadSize('block', loadMassKg);
+  // Start with the tip just past the block's far edge, so the block already sits on the slope.
+  const start = block.w / 2 + 0.02;
 
-  // Wedge cross-section: tip at x = 0, back at x = −LEN, top rising towards the back.
   const shape = useMemo(() => {
     const s = new Shape();
     s.moveTo(0, 0);
-    s.lineTo(-LEN * SCALE, 0);
-    s.lineTo(-LEN * SCALE, LEN * tan * SCALE);
+    s.lineTo(-LEN, 0);
+    s.lineTo(-LEN, LEN * tan);
     s.closePath();
     return s;
   }, [tan]);
 
   const place = () => {
-    const insert = START + pushM * motion.current.fraction;
-    // A flat-bottomed load rests on the slope by its uphill (left) edge.
-    const underEdge = (insert + LOAD_W / 2) * tan;
-    wedge.current?.position.set(insert * SCALE, 0, -(DEPTH * SCALE) / 2);
-    load.current?.position.set(0, underEdge * SCALE, 0);
+    const insert = start + pushM * motion.current.fraction;
+    wedge.current?.position.set(insert, 0, -DEPTH / 2);
+    load.current?.position.set(0, (insert + block.w / 2) * tan, 0);
   };
   useFrame(() => {
     place();
@@ -70,48 +57,48 @@ export function WedgeScene({ wedgeAngleDeg, pushM, motion, playing }: WedgeScene
     place();
     invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, wedgeAngleDeg, invalidate]);
+  }, [playing, wedgeAngleDeg, loadMassKg, invalidate]);
 
-  const lw = LOAD_W * SCALE;
-  const lh = LOAD_H * SCALE;
   return (
     <>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[2, 4, 3]} intensity={1.2} />
-      <mesh position={[0, -0.02, 0]}>
-        <boxGeometry args={[3, 0.04, 1.4]} />
-        <meshStandardMaterial color={c.surface} roughness={0.9} />
-      </mesh>
-      <group ref={wedge}>
-        <mesh>
-          <extrudeGeometry args={[shape, { depth: DEPTH * SCALE, bevelEnabled: false }]} />
-          <meshStandardMaterial color={c.input} roughness={0.6} />
-        </mesh>
-        <SceneLabel position={[-LEN * SCALE, LEN * tan * SCALE + 0.08, (DEPTH * SCALE) / 2]}>
-          Wedge (pushed)
-        </SceneLabel>
-      </group>
-      {/* Guides behind the load: they let it move only up and down */}
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[(s * (LOAD_W * SCALE)) / 2, 0.55, -(DEPTH * SCALE) / 2 - 0.03]}>
-          <boxGeometry args={[0.04, 1.1, 0.04]} />
-          <meshStandardMaterial color={c.guide} />
-        </mesh>
-      ))}
-      <group ref={load}>
-        <mesh position={[0, lh / 2, 0]}>
-          <boxGeometry args={[lw, lh, DEPTH * SCALE - 0.04]} />
-          <meshStandardMaterial color={c.output} roughness={0.7} />
-        </mesh>
-        <SceneLabel position={[0, lh + 0.08, 0]}>Load (guided)</SceneLabel>
-      </group>
-      <gridHelper args={[4, 16, c.grid, c.grid]} position={[0, -0.039, 0]} />
+      <LabStage shadowArea={0.9} lightTarget={[0, 0.15, 0]} />
+      <Shadowed>
+        <group ref={wedge}>
+          <mesh material={m.wood}>
+            <extrudeGeometry args={[shape, { depth: DEPTH, bevelEnabled: false }]} />
+          </mesh>
+          {/* the hand pushes the thick end */}
+          <GlovedHand
+            position={[-LEN - 0.045, (LEN * tan) / 2, DEPTH / 2]}
+            rotation={[0, 0, Math.PI / 2]}
+          />
+          <SceneLabel position={[-LEN - 0.1, LEN * tan + 0.12, DEPTH / 2]}>
+            Effort (push the wedge)
+          </SceneLabel>
+        </group>
+        {/* Guides behind the block: it can only move up and down */}
+        {[-1, 1].map((s) => (
+          <mesh
+            key={s}
+            position={[(s * block.w) / 2, 0.45, -Math.max(block.d, DEPTH) / 2 - 0.04]}
+            material={m.framePaint}
+          >
+            <boxGeometry args={[0.03, 0.9, 0.03]} />
+          </mesh>
+        ))}
+        <group ref={load}>
+          <LoadObject kind="block" massKg={loadMassKg} />
+          <SceneLabel
+            position={[0, block.h + 0.1, 0]}
+          >{`Concrete block, ${loadMassKg} kg (load)`}</SceneLabel>
+        </group>
+      </Shadowed>
       <OrbitControls
         makeDefault
         target={[0, 0.15, 0]}
         enablePan={false}
-        minDistance={0.6}
-        maxDistance={4}
+        minDistance={0.4}
+        maxDistance={3}
         maxPolarAngle={Math.PI / 2.05}
       />
     </>

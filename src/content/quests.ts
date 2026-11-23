@@ -18,7 +18,16 @@ export type QuestStage =
   | { id: string; kind: 'check'; title: string; assessmentId: string }
   | { id: string; kind: 'reflect'; title: string };
 
-export type LabId = 'incline' | 'pulley' | 'lever' | 'wheel_axle' | 'hydraulic' | 'screw' | 'wedge';
+export type LabId =
+  | 'incline'
+  | 'pulley'
+  | 'lever'
+  | 'wheel_axle'
+  | 'hydraulic'
+  | 'screw'
+  | 'wedge'
+  | 'bicycle'
+  | 'brake';
 
 export interface Quest {
   id: string;
@@ -183,13 +192,29 @@ export const labs: readonly LabInfo[] = [
     icon: 'wedge',
     question: 'Does a thinner wedge make lifting easier, more efficient, or both?',
   },
+  {
+    id: 'bicycle',
+    title: 'Bicycle (compound)',
+    to: '/lab/bicycle',
+    icon: 'bicycle',
+    question:
+      'A bicycle is simple machines working together. Where does a cyclist’s effort go when climbing a hill?',
+  },
+  {
+    id: 'brake',
+    title: 'Hydraulic brake (compound)',
+    to: '/lab/hydraulic-brake',
+    icon: 'brake',
+    question: 'How does a light push on a brake pedal become the force that stops a heavy car?',
+  },
 ];
 
 /**
- * Machines not built yet, shown as plain text, never as links. Compound machines are named in the
- * concept note (SRC-G3, SRC-O3, SRC-O6) and come after the six simple machines (D-05).
+ * Machines not built yet, shown as plain text, never as links. Every machine named for the first
+ * releases (D-05) is now built; other compound machines (e.g. a hydraulic lift, farm tools,
+ * SRC-T5) would need the owner's approval.
  */
-export const plannedLabs: readonly string[] = ['Bicycle (compound)', 'Hydraulic brake (compound)'];
+export const plannedLabs: readonly string[] = [];
 
 export function findQuest(id: string | undefined): Quest | undefined {
   return quests.find((q) => q.id === id);

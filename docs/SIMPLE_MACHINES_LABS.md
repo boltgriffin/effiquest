@@ -14,7 +14,7 @@ Milestone 08: simple-machine laboratories on one shared template.
 | Wedge | ✔ | approved 2026-11-23 (D-22) | **Built in Milestone 14**: lifting wedge at `/lab/wedge` (§9) |
 | Hydraulic press | (SRC-O4, not a simple machine) | first release | Added in Milestone 09 on the same template: see `HYDRAULICS_LAB.md` |
 
-Screw and wedge were deferred by D-05 and approved by the owner on 2026-11-23 (D-22); they were built in Milestone 14 (§9). Compound machines (bicycle, hydraulic brake) are still to come.
+Screw and wedge were deferred by D-05 and approved by the owner on 2026-11-23 (D-22); they were built in Milestone 14 (§9). The compound machines (bicycle, hydraulic brake) were built in Milestone 16 (§10, D-24).
 
 ## 2. Shared laboratory template (`src/features/lab/shared`)
 
@@ -142,3 +142,42 @@ Both labs use the shared template: a physics module, settings, a definition, a 2
 - new icons `screw` and `wedge`;
 - the Lab page lists all six simple machines plus the hydraulic press, with "coming next" now the compound machines (bicycle, hydraulic brake);
 - the "simple to compound" lesson links to both new labs.
+
+## 10. Milestone 16: compound machines (bicycle and hydraulic brake)
+
+Both are chains of the simple machines already in the lab (SRC-G3, SRC-O3), and both are named as practical scenarios in the concept note (SRC-O6). D-05 listed them as "come next"; the owner asked for them on 2026-11-23 (D-24).
+
+| | Bicycle climbing a hill (`physics-core/bicycle.ts`, `/lab/bicycle`) | Hydraulic disc brake (`physics-core/brake.ts`, `/lab/hydraulic-brake`) |
+|---|---|---|
+| The chain | crank and chainring (wheel and axle) → chain → sprocket and rear wheel (wheel and axle) → the hill (inclined plane) | pedal (lever) → master cylinder → brake fluid (Pascal) → caliper piston → pads on the disc (friction) → tyre (wheel and axle in reverse) |
+| IMA | (R_c r₂ ÷ R_w r₁) ÷ sin α: gears × hill (6.88 by default) | pedal ratio × A₂ ÷ A₁ (25.53 by default) |
+| Settings | chainring 34/50, rear sprocket 11–34, hill 2–15 %, mass 50–110 kg, tyre rolling resistance, chain friction | pedal ratio, master and caliper piston diameters, clamp force needed, seal friction, pad friction |
+| Losses (each from its own parameter) | tyres flexing (C_rr), air (½ρC_dA v²), chain links bending under tension (μ_c, pin radius, teeth), pedal and wheel bearings | piston seals (both), pedal pivot pin |
+| Extra results | **drivetrain efficiency** (work reaching the road ÷ pedal work: D-13's "how much of the effort reaches the wheels"), gear ratio, pedalling rate, power | fluid pressure, master-piston force, friction force on the disc, braking force at the tyre |
+| Teaching points | a lower gear lowers the pedal force but not the work to climb; a steeper hill needs more work and power, and a larger *share* of it lifts the rider; efficiencies in a chain multiply | the lever and the hydraulics multiply the force and their IMAs multiply; the pedal moves about 25 times further than the pads; air in the line would make the pedal spongy (not modelled) |
+| Default hand check | resisting force 52.9 N at 2 m/s; drivetrain efficiency above 97 %; overall lower | **P 2.22 MPa, F 164.3 N, IMA 25.53, η 95.4 %, tyre force 1280 N** |
+
+**Validation (`physics-core/compound.test.ts`, 13 tests):**
+- the energy ledger closes (below 10⁻⁹ of the input);
+- IMA from the geometry equals the measured distance ratio;
+- the brake hand values above;
+- with no losses, η = 100 %;
+- drivetrain efficiency is 100 % without chain and bearing friction, and above the overall efficiency otherwise;
+- trends: gears, hill, piston sizes, pedal ratio;
+- invalid set-ups are rejected.
+
+**Template additions:**
+- an optional `outputForce` label, so the brake shows "Clamp force on the pads" instead of "Load weight";
+- distances are shown with as many decimals as the ruler resolves (the brake's 0.5 mm pad travel shows as 0.0005 m).
+
+**Display:**
+- **2D:** the bicycle is drawn to scale on its true slope, with the crank turning in the true gear ratio; the brake schematic magnifies its tiny movements 5× and says so.
+- **3D (realism kit):** a true-size bicycle on a tilted road that slides underneath; a car wheel with the disc, caliper and pads, the brake line, master cylinder and pedal with the driver's shoe. The wheel slows to a stop as the pads squeeze.
+
+**Assumptions to check:**
+- the brake squeezes the pads through 0.5 mm against the full clamp force; real clamp force builds up as the pads compress;
+- no air in the brake fluid;
+- the bicycle wheels' spinning energy is ignored;
+- the D-13 wording for the bicycle awaits the teacher's check.
+
+**Lessons now link to the labs:** simple to compound machines (both), hydraulics (brake), efficiency in practice (bicycle).

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 /*
  * One icon family: 24px grid, 1.75 stroke, round caps/joins, no fills except small dots.
- * Machine glyphs (incline, lever, pulley, hydraulic, screw, wedge) are drawn in the same style so domain
+ * Machine glyphs (incline, lever, pulley, hydraulic, screw, wedge, bicycle, brake) are drawn in the same style so domain
  * icons and UI icons read as one set. Add new icons here; do not mix in other icon libraries.
  */
 export const glyphs = {
@@ -156,6 +156,21 @@ export const glyphs = {
       <path d="M3 19h18" />
       <path d="M5 19 19 19 19 13z" />
       <path d="M13 15V7h6v6" />
+    </>
+  ),
+  bicycle: (
+    <>
+      <circle cx="6" cy="16" r="3.5" />
+      <circle cx="18" cy="16" r="3.5" />
+      <path d="M6 16 10 9h6l2 7M10 9l2.5 7H6M15 6h2.5" />
+    </>
+  ),
+  brake: (
+    <>
+      <circle cx="15" cy="14" r="6" />
+      <circle cx="15" cy="14" r="1.5" />
+      <path d="M8.5 10.5 7 9.5V6M3 6h6" />
+      <path d="M20 9.5v9" />
     </>
   ),
   hydraulic: (

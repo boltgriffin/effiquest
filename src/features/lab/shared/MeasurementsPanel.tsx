@@ -47,7 +47,8 @@ export function MeasurementsPanel<P extends LabParams>({
   const v = (x: number | undefined | null) =>
     x === undefined || x === null || !Number.isFinite(x) ? null : x;
   const calc = (r: { ok: boolean; value?: number } | undefined) => (r && r.ok ? v(r.value) : null);
-  const digits = def.rulerResolutionM < 0.01 ? 3 : 2;
+  // As many decimals as the ruler resolves: 1 cm → 2, 1 mm → 3, 0.1 mm → 4.
+  const digits = Math.max(2, Math.round(-Math.log10(def.rulerResolutionM)));
 
   const record = async () => {
     setSaved({ for: run, state: 'saving' });
@@ -89,13 +90,13 @@ export function MeasurementsPanel<P extends LabParams>({
 
         <div className="grid grid-cols-2 gap-x-6 border-y border-rule sm:grid-cols-3 [&>*]:border-b [&>*]:border-rule">
           <Readout
-            symbol="W"
-            label="Load weight"
+            symbol={def.outputForce?.symbol ?? 'W'}
+            label={def.outputForce?.label ?? 'Load weight'}
             value={v(run?.measurement.loadWeightN)}
             unit="N"
             digits={1}
             tone="output"
-            definition="W = m × g, with g = 9.81 m/s²."
+            definition={def.outputForce?.definition ?? 'W = m × g, with g = 9.81 m/s².'}
           />
           <Readout
             symbol={

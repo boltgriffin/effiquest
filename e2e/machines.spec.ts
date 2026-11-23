@@ -103,7 +103,7 @@ test.describe('lever and wheel-and-axle labs, comparison', () => {
   });
 
   test('unknown machine shows not found', async ({ page }) => {
-    await page.goto('/lab/bicycle');
+    await page.goto('/lab/rocket');
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
   });
 });
@@ -225,10 +225,101 @@ test.describe('screw jack and wedge labs', () => {
     ).toBeVisible();
   });
 
-  test('both labs are listed; compound machines are shown as coming next', async ({ page }) => {
+  test('every machine is listed, including the compound machines', async ({ page }) => {
     await page.goto('/lab');
-    await expect(page.getByRole('link', { name: /Screw jack/ }).first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /^Wedge/ }).first()).toBeVisible();
-    await expect(page.getByText(/Bicycle \(compound\)/)).toBeVisible();
+    for (const name of [
+      /Screw jack/,
+      /^Wedge/,
+      /Bicycle \(compound\)/,
+      /Hydraulic brake \(compound\)/,
+    ]) {
+      await expect(page.getByRole('link', { name }).first()).toBeVisible();
+    }
+    await expect(page.getByRole('heading', { name: 'Coming next' })).toHaveCount(0);
+  });
+});
+
+test('the 3D view survives a full run without exhausting WebGL contexts', async ({ page }) => {
+  // Regression: the lab used to create a new WebGL context on every render while a run played,
+  // until the browser killed the 3D view ("Too many active WebGL contexts").
+  test.setTimeout(90_000);
+  const problems: string[] = [];
+  page.on('console', (m) => {
+    if (/Too many active WebGL contexts|Context Lost/.test(m.text())) problems.push(m.text());
+  });
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'effiquest-ui',
+      JSON.stringify({
+        state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+        version: 0,
+      }),
+    );
+  });
+  await page.goto('/lab/pulley');
+  await page.getByRole('tab', { name: '3D view' }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page
+    .getByRole('toolbar', { name: 'Simulation controls' })
+    .getByRole('button', { name: 'Start' })
+    .click();
+  await expect(page.getByText(/Run complete/).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.getByText('The 3D view stopped')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test.describe('compound machines', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'effiquest-ui',
+        JSON.stringify({
+          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          version: 0,
+        }),
+      );
+    });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addLocatorHandler(page.getByRole('button', { name: 'Dismiss' }), async (b) => {
+      await b.click();
+    });
+  });
+
+  test('bicycle: IMA = gears x hill, drivetrain efficiency and the D-13 note', async ({ page }) => {
+    await page.goto('/lab/bicycle');
+    await expect(page.getByRole('heading', { level: 1, name: 'Bicycle (compound)' })).toBeVisible();
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(
+      page.getByText('Run complete. The bicycle has ridden 30 m up the hill.'),
+    ).toBeVisible({ timeout: 60_000 });
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    // IMA = (0.17 m × r₂) ÷ (0.34 m × r₁) ÷ sin(atan 0.06) with r = 12.7 mm ÷ (2 sin(π/z)) = 6.88
+    await expect(panel).toContainText('6.88');
+    await expect(panel.getByText('Drivetrain efficiency').first()).toBeVisible();
+    await expect(panel.getByText(/reach the rear wheel/)).toBeVisible();
+    await expect(
+      page.getByRole('img', { name: /rolling resistance.*Air resistance.*chain.*bearings/i }),
+    ).toBeVisible();
+  });
+
+  test('hydraulic brake: hand-checked pedal force, pressure and IMA', async ({ page }) => {
+    await page.goto('/lab/hydraulic-brake');
+    await page
+      .getByRole('toolbar', { name: 'Simulation controls' })
+      .getByRole('button', { name: 'Start' })
+      .click();
+    await expect(page.getByText(/Run complete. The pads have been squeezed 0.5 mm/)).toBeVisible();
+    const panel = page.getByRole('region', { name: 'Measurements' });
+    await expect(panel.getByText('Clamp force on the pads')).toBeVisible();
+    // F = (644.06 × 0.075 + 0.0012 × 644.06) ÷ 0.2988 = 164.3 N; IMA = 4 × (48/19)² = 25.53; P = 2.22 MPa
+    await expect(panel).toContainText('164.3');
+    await expect(panel).toContainText('25.53');
+    await expect(panel).toContainText('2.22');
+    // Pad travel shown to 0.1 mm
+    await expect(panel).toContainText('0.0005');
   });
 });

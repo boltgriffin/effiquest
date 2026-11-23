@@ -12,6 +12,10 @@ import { DEFAULT_LEVER_PARAMS } from '@/features/lab/machines/leverParams';
 import { WheelAxleDiagram } from '@/features/lab/machines/WheelAxleDiagram';
 import { HydraulicDiagram } from '@/features/lab/machines/HydraulicDiagram';
 import { DEFAULT_HYDRAULIC_PARAMS } from '@/features/lab/machines/hydraulicParams';
+import { BicycleDiagram } from '@/features/lab/machines/BicycleDiagram';
+import { DEFAULT_BICYCLE_PARAMS } from '@/features/lab/machines/bicycleParams';
+import { BrakeDiagram } from '@/features/lab/machines/BrakeDiagram';
+import { DEFAULT_BRAKE_PARAMS } from '@/features/lab/machines/brakeParams';
 import { ScrewDiagram } from '@/features/lab/machines/ScrewDiagram';
 import { DEFAULT_SCREW_PARAMS } from '@/features/lab/machines/screwParams';
 import { WedgeDiagram } from '@/features/lab/machines/WedgeDiagram';
@@ -28,6 +32,8 @@ const previews = {
   hydraulic: <HydraulicDiagram params={DEFAULT_HYDRAULIC_PARAMS} className="w-full" />,
   screw: <ScrewDiagram params={DEFAULT_SCREW_PARAMS} className="w-full" />,
   wedge: <WedgeDiagram params={DEFAULT_WEDGE_PARAMS} className="w-full" />,
+  bicycle: <BicycleDiagram params={DEFAULT_BICYCLE_PARAMS} className="w-full" />,
+  brake: <BrakeDiagram params={DEFAULT_BRAKE_PARAMS} className="w-full" />,
 };
 
 export default function LabIndexPage() {
@@ -71,22 +77,24 @@ export default function LabIndexPage() {
           </li>
         ))}
       </ul>
-      <section aria-labelledby="coming-next">
-        <h2 id="coming-next" className="font-display text-xl">
-          Coming next
-        </h2>
-        <ul className="mt-3 flex flex-wrap gap-3 text-sm text-muted">
-          {plannedLabs.map((p) => (
-            <li
-              key={p}
-              className="flex items-center gap-2 rounded-md border border-dashed border-rule-strong px-3 py-2"
-            >
-              <Icon name="lock" size={16} />
-              {p}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {plannedLabs.length ? (
+        <section aria-labelledby="coming-next">
+          <h2 id="coming-next" className="font-display text-xl">
+            Coming next
+          </h2>
+          <ul className="mt-3 flex flex-wrap gap-3 text-sm text-muted">
+            {plannedLabs.map((p) => (
+              <li
+                key={p}
+                className="flex items-center gap-2 rounded-md border border-dashed border-rule-strong px-3 py-2"
+              >
+                <Icon name="lock" size={16} />
+                {p}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
