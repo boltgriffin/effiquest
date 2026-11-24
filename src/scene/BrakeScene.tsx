@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { CatmullRomCurve3, Vector3, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { LabStage, Shadowed } from './realism/LabStage';
 import { useLabMaterials } from './realism/materials';
 import { useRealism } from './realism/quality';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface BrakeSceneProps {
@@ -189,7 +190,7 @@ export function BrakeScene({
           Caliper and pads on the disc
         </SceneLabel>
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, 0.45, 0]}
         enablePan={false}

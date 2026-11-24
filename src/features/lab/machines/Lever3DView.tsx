@@ -9,19 +9,26 @@ const VIEWS: CameraView[] = [
   { id: 'fulcrum', label: 'Fulcrum', position: [0.2, 0.7, 1.1], target: [0, 0.55, 0] },
 ];
 
+/** The Lever scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function LeverModel({ params, motion, playing }: View3DProps<LeverLabParams>) {
+  return (
+    <LeverScene
+      effortArmM={params.effortArmM}
+      loadArmM={params.loadArmM}
+      rotationDeg={LEVER_ROTATION_DEG}
+      loadMassKg={params.loadMassKg}
+      pinRadiusM={LEVER_PIN_RADIUS_M}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the lever. */
 export default function Lever3DView({ params, motion, playing }: View3DProps<LeverLabParams>) {
   return (
     <LabCanvas label="3D view: first-class lever on a fulcrum" views={VIEWS}>
-      <LeverScene
-        effortArmM={params.effortArmM}
-        loadArmM={params.loadArmM}
-        rotationDeg={LEVER_ROTATION_DEG}
-        loadMassKg={params.loadMassKg}
-        pinRadiusM={LEVER_PIN_RADIUS_M}
-        motion={motion}
-        playing={playing}
-      />
+      <LeverModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

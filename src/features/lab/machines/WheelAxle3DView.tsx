@@ -9,6 +9,20 @@ const VIEWS: CameraView[] = [
   { id: 'axle', label: 'Axle', position: [0.6, 1.4, 1.2], target: [0, 1.3, 0] },
 ];
 
+/** The WheelAxle scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function WheelAxleModel({ params, motion, playing }: View3DProps<WheelAxleLabParams>) {
+  return (
+    <WheelAxleScene
+      wheelRadiusM={params.wheelRadiusM}
+      axleRadiusM={params.axleRadiusM}
+      liftM={WHEEL_AXLE_FIXED.liftM}
+      loadMassKg={params.loadMassKg}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the wheel and axle. */
 export default function WheelAxle3DView({
   params,
@@ -17,14 +31,7 @@ export default function WheelAxle3DView({
 }: View3DProps<WheelAxleLabParams>) {
   return (
     <LabCanvas label="3D view: wheel and axle winch" views={VIEWS}>
-      <WheelAxleScene
-        wheelRadiusM={params.wheelRadiusM}
-        axleRadiusM={params.axleRadiusM}
-        liftM={WHEEL_AXLE_FIXED.liftM}
-        loadMassKg={params.loadMassKg}
-        motion={motion}
-        playing={playing}
-      />
+      <WheelAxleModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

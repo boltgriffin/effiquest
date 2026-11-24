@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { Shape, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { GlovedHand } from './realism/GlovedHand';
@@ -8,6 +7,7 @@ import { LabStage, Shadowed } from './realism/LabStage';
 import { LoadObject } from './realism/Loads';
 import { loadSize } from './realism/loadSize';
 import { useLabMaterials } from './realism/materials';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface WedgeSceneProps {
@@ -93,7 +93,7 @@ export function WedgeScene({ wedgeAngleDeg, pushM, loadMassKg, motion, playing }
           >{`Concrete block, ${loadMassKg} kg (load)`}</SceneLabel>
         </group>
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, 0.15, 0]}
         enablePan={false}

@@ -16,6 +16,8 @@ export interface Realism {
   textures: boolean;
   /** Round-shape segments. */
   segments: number;
+  /** Canvas device-pixel-ratio range. */
+  dpr: [number, number];
 }
 
 const TIERS: Record<QualityTier, Realism> = {
@@ -27,6 +29,7 @@ const TIERS: Record<QualityTier, Realism> = {
     motionEffects: false,
     textures: false,
     segments: 16,
+    dpr: [1, 1],
   },
   auto: {
     tier: 'auto',
@@ -36,6 +39,7 @@ const TIERS: Record<QualityTier, Realism> = {
     motionEffects: true,
     textures: true,
     segments: 32,
+    dpr: [1, 1.5],
   },
   high: {
     tier: 'high',
@@ -45,6 +49,7 @@ const TIERS: Record<QualityTier, Realism> = {
     motionEffects: true,
     textures: true,
     segments: 48,
+    dpr: [1, 2],
   },
 };
 

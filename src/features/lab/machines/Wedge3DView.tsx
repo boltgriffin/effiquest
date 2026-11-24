@@ -9,17 +9,24 @@ const VIEWS: CameraView[] = [
   { id: 'faces', label: 'Faces', position: [0.35, 0.15, 0.55], target: [0.05, 0.06, 0] },
 ];
 
+/** The Wedge scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function WedgeModel({ params, motion, playing }: View3DProps<WedgeLabParams>) {
+  return (
+    <WedgeScene
+      wedgeAngleDeg={params.wedgeAngleDeg}
+      pushM={WEDGE_PUSH_M}
+      loadMassKg={params.loadMassKg}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the lifting wedge. */
 export default function Wedge3DView({ params, motion, playing }: View3DProps<WedgeLabParams>) {
   return (
     <LabCanvas label="3D view: lifting wedge at true size" views={VIEWS}>
-      <WedgeScene
-        wedgeAngleDeg={params.wedgeAngleDeg}
-        pushM={WEDGE_PUSH_M}
-        loadMassKg={params.loadMassKg}
-        motion={motion}
-        playing={playing}
-      />
+      <WedgeModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

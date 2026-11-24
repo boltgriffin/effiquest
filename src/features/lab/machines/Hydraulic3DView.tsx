@@ -9,6 +9,20 @@ const VIEWS: CameraView[] = [
   { id: 'pistons', label: 'Pistons', position: [0.05, 0.75, 0.45], target: [0, 0.3, 0] },
 ];
 
+/** The Hydraulic scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function HydraulicModel({ params, motion, playing }: View3DProps<HydraulicLabParams>) {
+  return (
+    <HydraulicScene
+      inputDiameterM={params.inputDiameterM}
+      outputDiameterM={params.outputDiameterM}
+      loadMassKg={params.loadMassKg}
+      liftM={HYDRAULIC_LIFT_M}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the hydraulic press. */
 export default function Hydraulic3DView({
   params,
@@ -17,14 +31,7 @@ export default function Hydraulic3DView({
 }: View3DProps<HydraulicLabParams>) {
   return (
     <LabCanvas label="3D view: hydraulic press at true size, pumped in 10 cm strokes" views={VIEWS}>
-      <HydraulicScene
-        inputDiameterM={params.inputDiameterM}
-        outputDiameterM={params.outputDiameterM}
-        loadMassKg={params.loadMassKg}
-        liftM={HYDRAULIC_LIFT_M}
-        motion={motion}
-        playing={playing}
-      />
+      <HydraulicModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

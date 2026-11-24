@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { ErrorState } from '@/components/StatePanels';
-import { useUiStore, type QualityTier } from '@/store/uiStore';
+import { realismFor } from '@/scene/realism/quality';
+import { useUiStore } from '@/store/uiStore';
 import { cx } from '@/utils/cx';
 import type { CameraView } from './shared/types';
-
-const DPR: Record<QualityTier, [number, number]> = {
-  low: [1, 1],
-  auto: [1, 1.5],
-  high: [1, 2],
-};
 
 type Controls = { target: { set: (x: number, y: number, z: number) => void }; update: () => void };
 
@@ -77,9 +72,10 @@ export default function LabCanvas({
       <div className="min-h-0 flex-1 touch-none">
         <Canvas
           key={generation}
-          dpr={DPR[quality]}
+          dpr={realismFor(quality).dpr}
           frameloop="demand"
-          shadows={quality !== 'low'}
+          // Standard (PCF) shadow maps: this three.js version removed the soft variant.
+          shadows={quality !== 'low' ? 'percentage' : false}
           camera={{ position: views[0]?.position ?? [3, 2.5, 4], fov: 45 }}
           aria-label={label}
           onCreated={({ gl }) => {

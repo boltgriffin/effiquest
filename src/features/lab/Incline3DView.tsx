@@ -10,6 +10,27 @@ const VIEWS: CameraView[] = [
   { id: 'top', label: 'Above', position: [0.01, 3.4, 0.6], target: [0, 0.3, 0] },
 ];
 
+/** The Incline scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function InclineModel({
+  params,
+  motion,
+  playing,
+}: {
+  params: InclineParams;
+  motion: MotionRef;
+  playing: boolean;
+}) {
+  return (
+    <InclineScene
+      angleDeg={params.angleDeg}
+      lengthM={RAMP_LENGTH_M}
+      massKg={params.massKg}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the inclined plane (Three.js stays out of the main bundle). */
 export default function Incline3DView({
   params,
@@ -22,13 +43,7 @@ export default function Incline3DView({
 }) {
   return (
     <LabCanvas label={`3D view: ramp at ${params.angleDeg} degrees`} views={VIEWS}>
-      <InclineScene
-        angleDeg={params.angleDeg}
-        lengthM={RAMP_LENGTH_M}
-        massKg={params.massKg}
-        motion={motion}
-        playing={playing}
-      />
+      <InclineModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

@@ -8,12 +8,12 @@ import LearnPage from '@/pages/LearnPage';
 import QuestCheckPage from '@/pages/QuestCheckPage';
 import QuestPage from '@/pages/QuestPage';
 import QuestsPage from '@/pages/QuestsPage';
-import WelcomePage from '@/pages/WelcomePage';
 import AppShell from './AppShell';
 import RootLayout from './RootLayout';
 
-// Heavier screens are split out: lesson text, lab (diagram + 3D), progress (charts), settings,
-// design reference.
+// Heavier screens are split out: welcome (3D showcase), lesson text, lab (diagram + 3D), progress
+// (charts), settings, design reference.
+const WelcomePage = lazy(() => import('@/pages/WelcomePage'));
 const ModulePage = lazy(() => import('@/pages/ModulePage'));
 const LabIndexPage = lazy(() => import('@/pages/LabIndexPage'));
 const MachineLabPage = lazy(() => import('@/pages/MachineLabPage'));
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <RouteError />,
     children: [
-      { path: '/welcome', element: <WelcomePage /> },
+      { path: '/welcome', element: lazyPage(<WelcomePage />) },
       {
         path: '/',
         element: <AppShell />,

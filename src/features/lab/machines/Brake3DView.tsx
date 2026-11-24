@@ -10,22 +10,29 @@ const VIEWS: CameraView[] = [
   { id: 'caliper', label: 'Caliper', position: [0.75, 0.55, 0.45], target: [0.55, 0.4, -0.07] },
 ];
 
-/** Lazy-loaded 3D view of the hydraulic brake. */
-export default function Brake3DView({ params, motion, playing }: View3DProps<BrakeLabParams>) {
+/** The Brake scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function BrakeModel({ params, motion, playing }: View3DProps<BrakeLabParams>) {
   const areaRatio = (params.caliperDiameterMm / params.masterDiameterMm) ** 2;
   return (
+    <BrakeScene
+      pedalRatio={params.pedalRatio}
+      masterDiameterM={params.masterDiameterMm / 1000}
+      caliperDiameterM={params.caliperDiameterMm / 1000}
+      pedalArmM={BRAKE_FIXED.pedalArmM}
+      pedalTravelM={BRAKE_FIXED.padTravelM * areaRatio * params.pedalRatio}
+      discRadiusM={BRAKE_FIXED.discRadiusM}
+      wheelRadiusM={BRAKE_FIXED.wheelRadiusM}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
+/** Lazy-loaded 3D view of the hydraulic brake. */
+export default function Brake3DView({ params, motion, playing }: View3DProps<BrakeLabParams>) {
+  return (
     <LabCanvas label="3D view: hydraulic brake from pedal to wheel" views={VIEWS}>
-      <BrakeScene
-        pedalRatio={params.pedalRatio}
-        masterDiameterM={params.masterDiameterMm / 1000}
-        caliperDiameterM={params.caliperDiameterMm / 1000}
-        pedalArmM={BRAKE_FIXED.pedalArmM}
-        pedalTravelM={BRAKE_FIXED.padTravelM * areaRatio * params.pedalRatio}
-        discRadiusM={BRAKE_FIXED.discRadiusM}
-        wheelRadiusM={BRAKE_FIXED.wheelRadiusM}
-        motion={motion}
-        playing={playing}
-      />
+      <BrakeModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

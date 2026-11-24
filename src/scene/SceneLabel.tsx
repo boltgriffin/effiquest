@@ -1,4 +1,5 @@
 import { Html } from '@react-three/drei';
+import { useShowcase } from './realism/showcase';
 
 /**
  * A text label pinned to a point in a 3D scene (DOM overlay: readable at any zoom, no font
@@ -12,6 +13,8 @@ export function SceneLabel({
   position: [number, number, number];
   children: string;
 }) {
+  // The welcome showcase names the machine in its own panel; labels would crowd the platform.
+  if (useShowcase()) return null;
   return (
     <Html position={position} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
       <span

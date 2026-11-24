@@ -9,19 +9,26 @@ const VIEWS: CameraView[] = [
   { id: 'thread', label: 'Thread', position: [0.12, 0.22, 0.22], target: [0, 0.2, 0] },
 ];
 
+/** The Screw scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function ScrewModel({ params, motion, playing }: View3DProps<ScrewLabParams>) {
+  return (
+    <ScrewScene
+      handleRadiusM={params.handleRadiusM}
+      pitchMm={params.pitchMm}
+      threadRadiusM={SCREW_FIXED.threadRadiusM}
+      loadMassKg={params.loadMassKg}
+      liftM={SCREW_FIXED.liftM}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the screw jack. */
 export default function Screw3DView({ params, motion, playing }: View3DProps<ScrewLabParams>) {
   return (
     <LabCanvas label="3D view: screw jack at true size" views={VIEWS}>
-      <ScrewScene
-        handleRadiusM={params.handleRadiusM}
-        pitchMm={params.pitchMm}
-        threadRadiusM={SCREW_FIXED.threadRadiusM}
-        loadMassKg={params.loadMassKg}
-        liftM={SCREW_FIXED.liftM}
-        motion={motion}
-        playing={playing}
-      />
+      <ScrewModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

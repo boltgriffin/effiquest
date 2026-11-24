@@ -60,7 +60,9 @@
   }
 }
 
-:root[data-theme='dark'] {
+/* .theme-dark applies the dark tokens to one region (the welcome screen is always dark). */
+:root[data-theme='dark'],
+.theme-dark {
   --bg: #0e1413;
   --surface: #151d1c;
   --surface-2: #1d2827;
@@ -168,6 +170,68 @@ body {
       transparent 1px
     );
   background-size: 24px 24px;
+}
+
+/* Welcome screen (always dark: .theme-dark). Decorative backgrounds only; they stop with reduced motion. */
+.welcome-aurora {
+  background:
+    radial-gradient(
+      42rem 26rem at 12% 0%,
+      color-mix(in srgb, var(--brand) 18%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 22rem at 88% 10%,
+      color-mix(in srgb, var(--brand) 9%, transparent),
+      transparent 70%
+    );
+  animation: welcome-drift 20s ease-in-out infinite alternate;
+}
+@keyframes welcome-drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
+  }
+}
+.welcome-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--rule) 60%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--rule) 60%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 75%);
+}
+/* The 3D showcase viewport: a pool of light around the platform */
+.showcase-stage {
+  background:
+    radial-gradient(
+      ellipse 65% 55% at 50% 42%,
+      color-mix(in srgb, var(--brand) 12%, var(--surface)),
+      transparent 72%
+    ),
+    var(--bg);
+}
+.showcase-fade {
+  animation: showcase-fade 0.35s var(--ease-standard, ease-out) both;
+}
+@keyframes showcase-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Hatch = "lost energy" texture so loss is never color-alone */

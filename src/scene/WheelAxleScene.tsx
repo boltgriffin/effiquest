@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Html, OrbitControls } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { Vector3, type Group, type Mesh } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { GlovedHand } from './realism/GlovedHand';
@@ -9,8 +9,10 @@ import { LoadObject } from './realism/Loads';
 import { loadSize } from './realism/loadSize';
 import { useLabMaterials } from './realism/materials';
 import { useRealism } from './realism/quality';
+import { useShowcase } from './realism/showcase';
 import { Rope } from './realism/Rope';
 import { newSwing, stepSwing } from './realism/swing';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface WheelAxleSceneProps {
@@ -46,6 +48,7 @@ export function WheelAxleScene({
 }: WheelAxleSceneProps) {
   const m = useLabMaterials();
   const realism = useRealism();
+  const showcase = useShowcase();
   const invalidate = useThree((s) => s.invalidate);
   const wheel = useRef<Group>(null);
   const load = useRef<Group>(null);
@@ -168,22 +171,25 @@ export function WheelAxleScene({
           segments={16}
           slack={() => 0.15 + pulled() / Math.max(pileA.distanceTo(pileB), 0.1)}
         />
-        <Html
-          position={[wheelRadiusM + 0.4, handY, 0]}
-          center
-          zIndexRange={[10, 0]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <span
-            ref={dinText}
-            aria-hidden="true"
-            className="block rounded-sm border border-rule bg-surface/90 px-1.5 py-0.5 text-[11px] whitespace-nowrap text-ink shadow-pop"
+        {/* Live text readout: lab view only (the welcome showcase has its own panel). */}
+        {showcase ? null : (
+          <Html
+            position={[wheelRadiusM + 0.4, handY, 0]}
+            center
+            zIndexRange={[10, 0]}
+            style={{ pointerEvents: 'none' }}
           >
-            Effort · rope pulled 0.00 m
-          </span>
-        </Html>
+            <span
+              ref={dinText}
+              aria-hidden="true"
+              className="block rounded-sm border border-rule bg-surface/90 px-1.5 py-0.5 text-[11px] whitespace-nowrap text-ink shadow-pop"
+            >
+              Effort · rope pulled 0.00 m
+            </span>
+          </Html>
+        )}
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, 0.9, 0]}
         enablePan={false}

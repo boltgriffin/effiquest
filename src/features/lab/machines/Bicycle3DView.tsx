@@ -10,21 +10,28 @@ const VIEWS: CameraView[] = [
   { id: 'drive', label: 'Gears', position: [0.25, 0.4, 0.75], target: [0.25, 0.25, 0] },
 ];
 
+/** The Bicycle scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function BicycleModel({ params, motion, playing }: View3DProps<BicycleLabParams>) {
+  return (
+    <BicycleScene
+      slopePercent={params.slopePercent}
+      wheelRadiusM={BICYCLE_FIXED.wheelRadiusM}
+      crankM={BICYCLE_FIXED.crankM}
+      chainringRadiusM={sprocketRadius(params.chainringTeeth, BICYCLE_FIXED.chainPitchM)}
+      sprocketRadiusM={sprocketRadius(params.sprocketTeeth, BICYCLE_FIXED.chainPitchM)}
+      distanceM={BICYCLE_FIXED.distanceM}
+      massKg={params.massKg}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the bicycle climbing a hill. */
 export default function Bicycle3DView({ params, motion, playing }: View3DProps<BicycleLabParams>) {
   return (
     <LabCanvas label={`3D view: bicycle on a ${params.slopePercent} percent hill`} views={VIEWS}>
-      <BicycleScene
-        slopePercent={params.slopePercent}
-        wheelRadiusM={BICYCLE_FIXED.wheelRadiusM}
-        crankM={BICYCLE_FIXED.crankM}
-        chainringRadiusM={sprocketRadius(params.chainringTeeth, BICYCLE_FIXED.chainPitchM)}
-        sprocketRadiusM={sprocketRadius(params.sprocketTeeth, BICYCLE_FIXED.chainPitchM)}
-        distanceM={BICYCLE_FIXED.distanceM}
-        massKg={params.massKg}
-        motion={motion}
-        playing={playing}
-      />
+      <BicycleModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

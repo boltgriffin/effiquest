@@ -23,7 +23,8 @@ Before declaring work done: `typecheck`, `lint`, `test`, `build` must pass.
 src/
   app/          router, AppShell (layout, nav). Nothing imports app/.
   pages/        route-level screens; compose features and components
-  features/     vertical slices: lab/ (shared/ template + machines/ definitions; see docs/SIMPLE_MACHINES_LABS.md), assessment/ (runner, scoring, results; docs/QUESTS_AND_ASSESSMENTS.md), progress/, teacher/; features do not import each other
+  features/     vertical slices: lab/ (shared/ template + machines/ definitions; see docs/SIMPLE_MACHINES_LABS.md;
+                showcase/ = welcome screen 3D selector reusing each lab's Model, docs/REALISTIC_3D.md §6), assessment/ (runner, scoring, results; docs/QUESTS_AND_ASSESSMENTS.md), progress/, teacher/; features do not import each other
   components/   shared UI: ui/ (design-system components), assessment/ (ItemView), icons/, StatePanels, ErrorBoundary, EquationCard
   content/      module, quest and misconception data (source-traced; no invented lesson text) +
                 progress.ts (pure derivation of completion from the progress event log)

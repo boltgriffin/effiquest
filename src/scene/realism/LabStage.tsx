@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
-import { useThree } from '@react-three/fiber';
-import { PMREMGenerator, type Group, type Mesh } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import type { Group, Mesh } from 'three';
 import { useLabMaterials } from './materials';
 import { useRealism } from './quality';
+import { useShowcase } from './showcase';
+import { useStudioEnvironment } from './studioEnvironment';
 
 /**
  * The lab setting shared by every 3D scene: studio reflections (generated, no download), a key
@@ -22,33 +22,12 @@ export function LabStage({
 }) {
   const r = useRealism();
   const m = useLabMaterials();
-  const get = useThree((s) => s.get);
-  const invalidate = useThree((s) => s.invalidate);
+  const showcase = useShowcase();
 
-  // The renderer and scene are three.js objects owned by the canvas; they are read from the
-  // store inside effects (not captured from a hook) and configured there.
-  useEffect(() => {
-    const { gl, scene } = get();
-    gl.shadowMap.enabled = r.shadows;
-    if (!r.environment) {
-      scene.environment = null;
-      invalidate();
-      return;
-    }
-    const pmrem = new PMREMGenerator(gl);
-    const room = new RoomEnvironment();
-    const target = pmrem.fromScene(room, 0.04);
-    scene.environment = target.texture;
-    scene.environmentIntensity = 0.6;
-    invalidate();
-    return () => {
-      scene.environment = null;
-      target.dispose();
-      pmrem.dispose();
-      room.dispose?.();
-    };
-  }, [r.environment, r.shadows, get, invalidate]);
+  useStudioEnvironment(!showcase);
 
+  // On the welcome showcase one shared stage lights every machine.
+  if (showcase) return null;
   const [tx, ty, tz] = lightTarget;
   return (
     <>

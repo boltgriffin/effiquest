@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import type { Group, Mesh } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { GlovedHand } from './realism/GlovedHand';
@@ -9,6 +8,7 @@ import { LoadObject } from './realism/Loads';
 import { loadSize } from './realism/loadSize';
 import { useLabMaterials } from './realism/materials';
 import { useRealism } from './realism/quality';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface HydraulicSceneProps {
@@ -152,7 +152,7 @@ export function HydraulicScene({
           Oil: same pressure everywhere
         </SceneLabel>
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, 0.3, 0]}
         enablePan={false}

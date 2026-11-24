@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { Vector3, type Group } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { GlovedHand } from './realism/GlovedHand';
@@ -9,6 +8,7 @@ import { LoadObject } from './realism/Loads';
 import { loadSize } from './realism/loadSize';
 import { useLabMaterials } from './realism/materials';
 import { Rope } from './realism/Rope';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface InclineSceneProps {
@@ -113,7 +113,7 @@ export function InclineScene({ angleDeg, lengthM, massKg, motion, playing }: Inc
           </group>
         </group>
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, height / 2, 0]}
         enablePan={false}

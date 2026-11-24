@@ -10,6 +10,27 @@ const VIEWS: CameraView[] = [
   { id: 'close', label: 'Pulleys', position: [0.2, 2.6, 1.3], target: [0, 2.4, 0] },
 ];
 
+/** The Pulley scene drawn from lab settings; shared by the lab and the welcome showcase. */
+export function PulleyModel({
+  params,
+  motion,
+  playing,
+}: {
+  params: PulleyLabParams;
+  motion: MotionRef;
+  playing: boolean;
+}) {
+  return (
+    <PulleyScene
+      segments={params.segments}
+      loadMassKg={params.loadMassKg}
+      liftM={PULLEY_GEOMETRY.liftM}
+      motion={motion}
+      playing={playing}
+    />
+  );
+}
+
 /** Lazy-loaded 3D view of the pulley system. */
 export default function Pulley3DView({
   params,
@@ -25,13 +46,7 @@ export default function Pulley3DView({
       label={`3D view: pulley system with ${params.segments} supporting rope segments`}
       views={VIEWS}
     >
-      <PulleyScene
-        segments={params.segments}
-        loadMassKg={params.loadMassKg}
-        liftM={PULLEY_GEOMETRY.liftM}
-        motion={motion}
-        playing={playing}
-      />
+      <PulleyModel params={params} motion={motion} playing={playing} />
     </LabCanvas>
   );
 }

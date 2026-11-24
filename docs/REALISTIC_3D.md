@@ -58,3 +58,33 @@ Milestone 15: realistic 3D labs. The owner chose all four parts (2026-11-23, D-2
 - **No people:** only a hand. A full human figure generated in code would look crude; it could be added from a licensed model, but that would be a download and needs approval.
 - **Motion effects are deliberately small.** Ropes sag, hanging loads swing a little after lift-off, and the pulled rope piles up. Loads and machine parts follow the model exactly; nothing wobbles in ways the physics does not support.
 - **Performance:** in the test browser's software renderer (no GPU) the busiest scene (pulley, during a run) ran at about 35 fps, and 62 fps at rest. On real low-end phones, if it is slow, choose Settings → 3D quality → Low. **A real-device check is still needed** (RELEASE_READINESS.md §5).
+
+## 6. Welcome screen showcase (Milestone 17, D-25)
+
+The welcome screen shows the nine labs' **own** 3D models on one round platform. Nothing is redrawn for it.
+
+**How the lab models are reused**
+- Each lab's 3D view exports a `Model` component (lab settings → scene), used by both the lab page and the showcase (`features/lab/showcase/models.tsx`, at each lab's default settings).
+- **One WebGL canvas** holds them all (several canvases would hit the browser's context limit, §3).
+- Inside the showcase, `ShowcaseContext` (`scene/realism/showcase.ts`) tells a scene to leave out what belongs to a single lab view: its floor and lights (`LabStage`), floating labels (`SceneLabel` and two live text readouts) and camera controls (`LabOrbitControls`). One shared stage lights the platform (`useStudioEnvironment` is shared with `LabStage`).
+- Each model is **scaled as a whole** to fit its stand, so its proportions are unchanged; the panel gives its real size. Ropes are left out of the size measurement (they always run between parts of the machine).
+- One change to a model on the showcase only: the bicycle's road is 2.2 m long instead of 6 m (same texture scale and speed).
+
+**Interaction:** previous/next arrows, a selector strip, tapping a machine on the track, swiping, and the arrow keys (Home/End too) on the 3D view. The carousel loops. "Explore simulation" opens the existing route from the lab list (`content/quests.ts`); no new routes.
+
+**Text:** title, route and question from the lab list; learning objective and the first sentence of the purpose from each lab's guide. Only the category label (simple / hydraulic / compound) is new.
+
+**Performance**
+| | Low | Auto | High |
+|---|---|---|---|
+| Demo motion, camera drift, particles | off (still picture) | 30 fps | 60 fps |
+| Models drawn | selected ± 2 | selected ± 2 | all nine |
+
+- The selected machine replays its own lab motion as a demonstration; nothing else moves continuously.
+- Models are built when they first come near (the selected one at once, neighbours one at a time), then kept.
+- Animation stops when the showcase is off screen and with reduced motion (moves are then instant).
+- Without WebGL, or if the graphics context is lost, the lab's 2D diagram is shown instead.
+
+**Tests:** `showcase/layout.test.ts` (placement, loop); `e2e/welcome.spec.ts` (all nine selections, arrows and loop, keys, swipe, every Explore route, no console errors, no sideways scroll, no-WebGL fallback). The showcase tests run after the rest of the suite, one at a time per device (`playwright.config.ts`), because test browsers draw 3D on the CPU.
+
+**Also fixed:** the canvases now ask for standard shadow maps directly (the "PCFSoftShadowMap has been removed" warning is gone).

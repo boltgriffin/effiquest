@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { Vector3, type Group, type Mesh } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { pulleyLayout, SPACING } from '@/features/lab/pulley/layout';
@@ -13,6 +12,7 @@ import { useLabMaterials } from './realism/materials';
 import { useRealism } from './realism/quality';
 import { Rope } from './realism/Rope';
 import { newSwing, stepSwing } from './realism/swing';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 /**
@@ -223,7 +223,7 @@ export function PulleyScene({
           </group>
         </group>
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0, 1.5, 0]}
         enablePan={false}

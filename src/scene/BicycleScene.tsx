@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Html, OrbitControls, RoundedBox } from '@react-three/drei';
+import { Html, RoundedBox } from '@react-three/drei';
 import { Quaternion, Vector3, type Group, type Mesh, type MeshStandardMaterial } from 'three';
 import type { MotionRef } from '@/features/lab/motion';
 import { LabStage, Shadowed } from './realism/LabStage';
 import { useLabMaterials } from './realism/materials';
 import { useRealism } from './realism/quality';
+import { useShowcase } from './realism/showcase';
+import { LabOrbitControls } from './LabOrbitControls';
 import { SceneLabel } from './SceneLabel';
 
 interface BicycleSceneProps {
@@ -68,6 +70,7 @@ export function BicycleScene({
 }: BicycleSceneProps) {
   const m = useLabMaterials();
   const r = useRealism();
+  const showcase = useShowcase();
   const invalidate = useThree((s) => s.invalidate);
   const rear = useRef<Group>(null);
   const front = useRef<Group>(null);
@@ -75,15 +78,18 @@ export function BicycleScene({
   const hText = useRef<HTMLSpanElement>(null);
   const roadMesh = useRef<Mesh>(null);
   const alpha = Math.atan(slopePercent / 100);
+  // 6 m of road in the lab; a shorter stretch on the welcome showcase platform (same texture
+  // scale: one tile per 0.75 m, so it slides at the same speed).
+  const roadLengthM = showcase ? 2.2 : 6;
   // The road has its own copy of the concrete material so its texture can slide.
   const road = useMemo(() => {
     const mat = m.concrete.clone();
     if (mat.map) {
       mat.map = mat.map.clone();
-      mat.map.repeat.set(8, 1);
+      mat.map.repeat.set(roadLengthM / 0.75, 1);
     }
     return mat;
-  }, [m.concrete]);
+  }, [m.concrete, roadLengthM]);
   useEffect(() => () => road.dispose(), [road]);
 
   const place = () => {
@@ -92,9 +98,9 @@ export function BicycleScene({
     rear.current?.rotation.set(0, 0, -wheelAngle);
     front.current?.rotation.set(0, 0, -wheelAngle);
     crank.current?.rotation.set(0, 0, -wheelAngle * (r2 / r1));
-    // The road slides back under the bike: 6 m of road with the texture repeated 8 times.
+    // The road slides back under the bike (one texture tile per 0.75 m of road).
     const roadMat = roadMesh.current?.material as MeshStandardMaterial | undefined;
-    if (roadMat?.map) roadMat.map.offset.x = d / (6 / 8);
+    if (roadMat?.map) roadMat.map.offset.x = d / 0.75;
     if (hText.current) {
       hText.current.textContent = `Ridden ${d.toFixed(1)} m · height gained ${(d * Math.sin(alpha)).toFixed(2)} m`;
     }
@@ -144,7 +150,7 @@ export function BicycleScene({
         <group rotation={[0, 0, alpha]}>
           {/* Road */}
           <mesh ref={roadMesh} position={[0.5, -0.05, 0]} material={road}>
-            <boxGeometry args={[6, 0.1, 1.2]} />
+            <boxGeometry args={[roadLengthM, 0.1, 1.2]} />
           </mesh>
           {wheel(rear, 0)}
           {wheel(front, 1.0)}
@@ -218,22 +224,25 @@ export function BicycleScene({
             position={[0.5, Rw + 0.62, 0]}
           >{`Rider + bicycle, ${massKg} kg (load)`}</SceneLabel>
         </group>
-        <Html
-          position={[0.5, 1.45, 0]}
-          center
-          zIndexRange={[10, 0]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <span
-            ref={hText}
-            aria-hidden="true"
-            className="block rounded-sm border border-rule bg-surface/90 px-1.5 py-0.5 text-[11px] whitespace-nowrap text-ink shadow-pop"
+        {/* Live text readout: lab view only (the welcome showcase has its own panel). */}
+        {showcase ? null : (
+          <Html
+            position={[0.5, 1.45, 0]}
+            center
+            zIndexRange={[10, 0]}
+            style={{ pointerEvents: 'none' }}
           >
-            Ridden 0.0 m
-          </span>
-        </Html>
+            <span
+              ref={hText}
+              aria-hidden="true"
+              className="block rounded-sm border border-rule bg-surface/90 px-1.5 py-0.5 text-[11px] whitespace-nowrap text-ink shadow-pop"
+            >
+              Ridden 0.0 m
+            </span>
+          </Html>
+        )}
       </Shadowed>
-      <OrbitControls
+      <LabOrbitControls
         makeDefault
         target={[0.5, 0.5, 0]}
         enablePan={false}
