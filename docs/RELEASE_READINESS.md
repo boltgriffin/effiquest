@@ -123,6 +123,8 @@ Do this on **one low-end Android phone** and **one school PC**:
 
 **Redeployed (2026-11-24):** D-27 (commit `820b44b`): teacher-chosen YouTube videos in each module's Video tab. Checked on the live site: `/learn/torque` returns 200 and the precached assets include the player (`youtube-nocookie.com/embed`). **Still to check by hand:** each of the five videos plays inside the app (an uploader may have turned off embedding) and the offline message shows with the network off.
 
+**Redeployed (2026-11-24):** commit `9bae2e8`: lab run controls and 3D view fit phones (Start spans the width with Pause/Replay/Reset in even columns beneath; near-square 3D box on phones; the camera widens on narrow canvases so the whole machine stays in frame; drag/zoom hint shown on phones). Checked on the live site: `/lab/incline` returns 200 and the served lab and 3D chunks contain the new layout and camera fit. Checked before deploy in a phone-sized browser (Pixel 7, iPhone SE) for the incline, lever and pulley. **Still to check by hand:** the other six labs' 3D views on a real phone.
+
 **To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
