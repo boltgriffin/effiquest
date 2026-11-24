@@ -5,7 +5,7 @@ Milestone 12: draft lesson content for the five modules (`src/content/lessons.ts
 **Status: DRAFT for teacher review (decision D-10).**
 - The concept note names the module topics and objectives (SRC-O1..O6, SRC-M1, SRC-T3) but contains no lesson text (gap G-13). The developer drafted these lessons from those objectives; the subject teacher approves or edits them.
 - Every lesson shows **"Draft · teacher review"**. The bicycle-uphill section also shows **"Awaiting teacher check" (D-13)**.
-- Videos come from the teacher (Video tab).
+- Videos are YouTube links chosen by the teacher (Video tab, D-27), set in `src/content/modules.ts`.
 
 ## 1. What each lesson contains
 

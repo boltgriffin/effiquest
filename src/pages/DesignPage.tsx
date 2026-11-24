@@ -17,6 +17,7 @@ import { Slider } from '@/components/ui/Slider';
 import { Switch } from '@/components/ui/Switch';
 import { Tabs } from '@/components/ui/Tabs';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { YouTubeVideo } from '@/components/YouTubeVideo';
 import { questChecks } from '@/content/assessments';
 import type { ItemResponse } from '@/types';
 
@@ -272,6 +273,18 @@ export default function DesignPage() {
         <Callout tone="danger" title="Error">
           Something failed.
         </Callout>
+      </Section>
+
+      <Section title="YouTube video">
+        <p className="text-sm text-muted">
+          Click to load: nothing is requested from YouTube until play is pressed
+          (youtube-nocookie.com). Offline, it shows a message and the link instead.
+        </p>
+        <div className="max-w-xl">
+          <YouTubeVideo
+            video={{ youtubeId: 'T99yH_gw3p8', title: 'What is Torque? - Torque basics explained' }}
+          />
+        </div>
       </Section>
 
       <Section title="Assessment items">

@@ -6,7 +6,7 @@ import type { LabId } from './quests';
  * DRAFT lesson text for the five modules (Milestone 12). Decision D-10: the developer drafts from
  * the concept note's objectives; the teacher approves or edits. Every section names its source
  * (SRC-O / SRC-G / SRC-M / SRC-T codes, docs/SOURCE_REQUIREMENTS.md). Worked-example answers are
- * recomputed with edu-calc in lessons.test.ts. Videos come from the teacher (Video tab).
+ * recomputed with edu-calc in lessons.test.ts. Videos are teacher-chosen YouTube links (Video tab, D-27).
  */
 
 export type LessonBlock =

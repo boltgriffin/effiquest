@@ -12,13 +12,20 @@ export type MachineId =
   | 'bicycle'
   | 'brake';
 
+/** A YouTube video chosen by the teacher for a module (decisions D-10, D-27). */
+export interface YouTubeVideoRef {
+  /** The 11-character id from the YouTube link (watch?v=<id>). */
+  youtubeId: string;
+  /** Title as listed on YouTube. */
+  title: string;
+}
+
 export interface Lesson {
   id: string;
   slug: string;
   title: string;
   /** Markdown body. */
   body: string;
-  videoRef?: string;
   order: number;
   misconceptionIds: MisconceptionId[];
   durationMin: number;

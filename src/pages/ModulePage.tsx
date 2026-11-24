@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { EquationCard } from '@/components/EquationCard';
-import { Icon } from '@/components/icons/Icon';
 import { EmptyState, NotFoundState, SuccessState } from '@/components/StatePanels';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Callout } from '@/components/ui/Callout';
 import { PageHeader, Panel } from '@/components/ui/Panel';
 import { Tabs } from '@/components/ui/Tabs';
+import { YouTubeVideo } from '@/components/YouTubeVideo';
 import { getMisconception } from '@/content/misconceptions';
 import { findLesson } from '@/content/lessons';
 import { findModule, modules, type ModuleOutline } from '@/content/modules';
@@ -90,15 +90,12 @@ function ModuleView({ mod }: { mod: ModuleOutline }) {
               id: 'video',
               label: 'Video',
               icon: 'video',
-              content: (
-                <div className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md border border-dashed border-rule-strong bg-surface-2 p-6 text-center text-muted">
-                  <Icon name="video" size={32} />
-                  <p className="font-medium text-ink">No video yet</p>
-                  <p className="max-w-sm text-sm">
-                    Short flipped-learning videos will come from the teacher and will be saved for
-                    offline viewing.
-                  </p>
-                </div>
+              content: mod.video ? (
+                <YouTubeVideo video={mod.video} />
+              ) : (
+                <EmptyState icon="video" title="No video yet">
+                  Your teacher has not chosen a video for this module.
+                </EmptyState>
               ),
             },
             {

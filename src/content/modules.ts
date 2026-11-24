@@ -1,10 +1,11 @@
 import type { IconName } from '@/components/icons/Icon';
-import type { MisconceptionId } from '@/types';
+import type { MisconceptionId, YouTubeVideoRef } from '@/types';
 
 /**
  * Module skeletons. Titles and objectives restate the concept note's specific objectives
  * (SRC-O1..O6). Draft lesson text lives in content/lessons.ts (decision D-10: drafted by the
- * developer, approved by the teacher); videos come from the teacher. Equations come from
+ * developer, approved by the teacher). Videos are YouTube links chosen by the teacher
+ * (D-10, D-27); titles are as listed on YouTube. Equations come from
  * docs/PHYSICS_MODEL_PLAN.md.
  */
 export interface Equation {
@@ -23,11 +24,14 @@ export interface ModuleOutline {
   icon: IconName;
   misconceptionIds: MisconceptionId[];
   equations: Equation[];
+  /** Flipped-learning video chosen by the teacher (D-27). */
+  video?: YouTubeVideoRef;
 }
 
 export const modules: readonly ModuleOutline[] = [
   {
     id: 'torque',
+    video: { youtubeId: 'T99yH_gw3p8', title: 'What is Torque? - Torque basics explained' },
     title: 'Torque and rotational motion',
     objective:
       'Apply translational motion formulas to rotational contexts such as torque and angular acceleration.',
@@ -51,6 +55,7 @@ export const modules: readonly ModuleOutline[] = [
   },
   {
     id: 'advantage-efficiency',
+    video: { youtubeId: 'pcbkNu1lfPA', title: 'Ideal Mechanical Advantage and Efficiency' },
     title: 'Mechanical advantage and efficiency',
     objective:
       'Differentiate mechanical advantage from efficiency, and recognize friction, energy loss and real-world limits.',
@@ -76,6 +81,10 @@ export const modules: readonly ModuleOutline[] = [
   },
   {
     id: 'simple-compound',
+    video: {
+      youtubeId: 'E489NPUT6QY',
+      title: 'Lesson 31: Understanding Compound Machines (Grade 11 Strengthened SHS)',
+    },
     title: 'From simple to compound machines',
     objective:
       'Explain how the lever, pulley, wheel and axle, inclined plane, screw and wedge combine to form complex machines.',
@@ -93,6 +102,7 @@ export const modules: readonly ModuleOutline[] = [
   },
   {
     id: 'hydraulics',
+    video: { youtubeId: '093HqPD5HFw', title: 'Make a hydraulic lift using cardboard' },
     title: "Hydraulics and Pascal's principle",
     objective:
       "Apply basic hydraulic principles such as Pascal's law to real systems, including brakes, lifts and excavators.",
@@ -116,6 +126,7 @@ export const modules: readonly ModuleOutline[] = [
   },
   {
     id: 'efficiency-practice',
+    video: { youtubeId: 'iLeIQ_5YmHU', title: 'Efficiency of a Machine' },
     title: 'Measuring efficiency in real machines',
     objective:
       'Measure input and output forces, calculate efficiency, and analyze energy losses; apply this to practical scenarios.',

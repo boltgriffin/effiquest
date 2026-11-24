@@ -41,7 +41,7 @@ Suggested next step (first quest), module list with "Not started" status, diagno
 Numbered ruled list of the five modules with the misconceptions each targets. Each row - Works (navigation).
 
 ## 4. Module page `/learn/:moduleId`
-Tabs: **Lesson** (empty state: text not yet supplied), **Video** (empty frame: no video yet), **Key equations** (real equations with units). Side panel lists the targeted misconceptions. **Try it in the lab** - Works. Tabs - Works (keyboard arrows). Unknown module id → not-found state.
+Tabs: **Lesson** (empty state: text not yet supplied), **Video** (teacher-chosen YouTube video, click to load, privacy mode; offline message with link, D-27), **Key equations** (real equations with units). Side panel lists the targeted misconceptions. **Try it in the lab** - Works. Tabs - Works (keyboard arrows). Unknown module id → not-found state.
 
 ## 5. Laboratory `/lab` (inclined plane)
 Marked **Preview** in the header.
