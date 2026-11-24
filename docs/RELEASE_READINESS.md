@@ -113,6 +113,12 @@ Do this on **one low-end Android phone** and **one school PC**:
 - `sw.js` is served with no-cache; nosniff, Referrer-Policy, X-Frame-Options and HSTS are present;
 - none of the 41 JavaScript files contains a Supabase project reference (the only `supabase.co` text is the client library's generic `*.supabase.co` hostname pattern).
 
+**Redeployed (2026-11-24):** Milestone 17 (commit `778ebbf`): welcome screen with the 3D simulation showcase, plus the logo-matched favicon and app icons (`6de6ee8`). Checked after deploying:
+- the site is public; `/`, `/welcome`, `/lab/bicycle` and `/learn/torque` load;
+- the offline worker lists the welcome page, the showcase 3D code and the new maskable and Apple icons; the page links `favicon.svg?v=2` with theme colour `#0b6e66`;
+- `sw.js` is served with no-cache; the five security headers are present;
+- no JavaScript file contains a Supabase project reference.
+
 **To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
