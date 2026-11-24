@@ -119,6 +119,8 @@ Do this on **one low-end Android phone** and **one school PC**:
 - `sw.js` is served with no-cache; the five security headers are present;
 - no JavaScript file contains a Supabase project reference.
 
+**Redeployed (2026-11-24):** D-26 (commit `97b2460`): the welcome screen opens at the start of every visit. Checked on the live site with a returning learner (old "welcome seen" flag stored): opening `/` shows the welcome; after Enter the dashboard opens; a reload stays on the dashboard; a new tab starts on the welcome again; a direct link (`/lab/wedge`) opens its page.
+
 **To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
