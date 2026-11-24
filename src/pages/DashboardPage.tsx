@@ -21,14 +21,15 @@ import { labs, plannedLabs, quests } from '@/content/quests';
 import { InclineDiagram } from '@/features/lab/InclineDiagram';
 import { useProgress } from '@/hooks/useProgress';
 import { useLearnerStore } from '@/store/learnerStore';
-import { useUiStore } from '@/store/uiStore';
+import { useSessionStore } from '@/store/sessionStore';
 import type { ProgressEvent } from '@/types';
 
 export default function DashboardPage() {
-  const seenWelcome = useUiStore((s) => s.seenWelcome);
+  const enteredApp = useSessionStore((s) => s.enteredApp);
   const learnerCode = useLearnerStore((s) => s.learnerCode);
   const progress = useProgress();
-  if (!seenWelcome) return <Navigate to="/welcome" replace />;
+  // Every visit opened at the home address starts on the welcome screen (D-26).
+  if (!enteredApp) return <Navigate to="/welcome" replace />;
 
   return (
     <div className="flex flex-col gap-6">

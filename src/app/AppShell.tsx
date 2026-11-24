@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Icon } from '@/components/icons/Icon';
 import { eyebrowClass } from '@/components/ui/styles';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useLearnerStore } from '@/store/learnerStore';
+import { useSessionStore } from '@/store/sessionStore';
 import { cx } from '@/utils/cx';
 import { BrandMark, BrandName } from './BrandMark';
 import { MobileMenu } from './MobileMenu';
@@ -60,6 +61,13 @@ export default function AppShell() {
   const teacherMode = useLearnerStore((s) => s.teacherMode);
   const learnerCode = useLearnerStore((s) => s.learnerCode);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+  const enterApp = useSessionStore((s) => s.enterApp);
+  // A link straight to a page inside the app (e.g. a lab shared by the teacher) opens that page;
+  // only the home address starts on the welcome screen (D-26).
+  useEffect(() => {
+    if (pathname !== '/') enterApp();
+  }, [pathname, enterApp]);
 
   return (
     <div className="min-h-dvh md:flex">

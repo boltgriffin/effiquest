@@ -129,9 +129,7 @@ test.describe('welcome screen: 3D simulation showcase', () => {
     });
   }
 
-  test('the welcome counts as seen after exploring, so the dashboard opens next', async ({
-    page,
-  }) => {
+  test('exploring a lab lets the dashboard open for the rest of the visit', async ({ page }) => {
     await info(page).getByRole('button', { name: 'Explore simulation' }).click();
     await expect(page).toHaveURL(/\/lab\/lever$/);
     await page.goto('/');
@@ -176,4 +174,40 @@ test('without WebGL the showcase shows each lab diagram instead', async ({ page 
   await expect(stage(page).locator('svg').first()).toBeVisible();
   await page.getByRole('button', { name: /^Next simulation/ }).click();
   await expectSelected(page, 1);
+});
+
+// D-26: every visit opened at the home address starts on the welcome screen.
+test.describe('the welcome screen opens every visit', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test.beforeEach(() => test.slow());
+
+  test('new visit: welcome; after entering, a reload keeps the dashboard; a new tab starts again', async ({
+    page,
+    context,
+  }) => {
+    // A returning learner: preferences already saved on this device.
+    await context.addInitScript({
+      content: `localStorage.setItem('effiquest-ui', JSON.stringify({ state: { theme: 'system', quality: 'auto' }, version: 0 }));`,
+    });
+    await page.goto('/');
+    await expect(page).toHaveURL(/\/welcome$/);
+    await page.getByRole('button', { name: /^Enter( the lab)?$/ }).click();
+    await expect(page.getByRole('heading', { name: 'Your laboratory' })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Your laboratory' })).toBeVisible();
+
+    const second = await context.newPage();
+    await second.goto('/');
+    await expect(second).toHaveURL(/\/welcome$/);
+    await expect(
+      second.getByRole('heading', { level: 1, name: 'Explore. Experiment. Understand.' }),
+    ).toBeVisible();
+  });
+
+  test('a direct link to a page opens that page, not the welcome', async ({ page }) => {
+    await page.goto('/lab/wedge');
+    await expect(page.getByRole('heading', { level: 1, name: 'Wedge' })).toBeVisible();
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Your laboratory' })).toBeVisible();
+  });
 });

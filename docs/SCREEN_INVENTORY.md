@@ -27,7 +27,7 @@ Legend: **Works** = fully functional · **Sample** = functional UI showing clear
 - Quest questions and the lab's prediction prompt are short activity framings written for the layout; they should be reviewed by the teacher.
 
 ## 1. Welcome `/welcome`
-Shown on the first visit (the dashboard redirects here until it is dismissed). Full-width, no app chrome.
+Shown at the start of every visit (D-26: the dashboard redirects here until the learner enters; a reload stays put and direct links open their page). Full-width, no app chrome.
 - **Enter the laboratory** - Works: stores "seen" on this device and goes to the dashboard.
 - **How a lab session works** - Works: in-page link to the method section.
 - Hero diagram - static instance of the lab's inclined-plane diagram, with a legend for the three physics colors.

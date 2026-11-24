@@ -13,9 +13,13 @@ test('after one online visit, the app works with the network cut', async ({ page
     localStorage.setItem(
       'effiquest-ui',
       JSON.stringify({
-        state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+        state: { theme: 'system', quality: 'auto' },
         version: 0,
       }),
+    );
+    sessionStorage.setItem(
+      'effiquest-session',
+      JSON.stringify({ state: { enteredApp: true }, version: 0 }),
     );
   });
   await page.goto('/');

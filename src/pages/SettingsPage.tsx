@@ -37,7 +37,7 @@ export default function SettingsPage() {
   const online = useOnlineStatus();
   const navigate = useNavigate();
   const { hash } = useLocation();
-  const { quality, setQuality, theme, setTheme, setSeenWelcome } = useUiStore();
+  const { quality, setQuality, theme, setTheme } = useUiStore();
   const teacherMode = useLearnerStore((s) => s.teacherMode);
   const currentLearner = useLearnerStore((s) => s.learnerCode);
   const setTeacherMode = useLearnerStore((s) => s.setTeacherMode);
@@ -93,13 +93,7 @@ export default function SettingsPage() {
 
       <Panel eyebrow="Other" title="About">
         <div className="flex flex-wrap gap-2">
-          <Button
-            icon="home"
-            onClick={() => {
-              setSeenWelcome(false);
-              navigate('/welcome');
-            }}
-          >
+          <Button icon="home" onClick={() => navigate('/welcome')}>
             Show the welcome screen
           </Button>
           <ButtonLink to="/design" icon="layers">

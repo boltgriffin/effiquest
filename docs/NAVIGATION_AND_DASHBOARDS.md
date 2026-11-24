@@ -15,8 +15,8 @@ There is no authentication system, so no route protection is claimed. `/teacher`
 
 | Route | Screen | Notes |
 |---|---|---|
-| `/welcome` | Welcome | First visit; outside the app shell |
-| `/` | Student dashboard | Redirects to `/welcome` until the welcome screen is dismissed |
+| `/welcome` | Welcome | Start of every visit (D-26); outside the app shell |
+| `/` | Student dashboard | Redirects to `/welcome` at the start of each visit, until the learner enters (D-26) |
 | `/learn` | Modules list | Completion badges |
 | `/learn/:moduleId` | Module | Breadcrumbs; **Mark module complete** |
 | `/lab` | Lab picker | Four labs, planned machines as plain text, link to Compare |
@@ -90,7 +90,7 @@ Scope comes from D-15 (class CSV) and the "consequences" in `DECISIONS.md`.
 
 | Journey | Steps | Test |
 |---|---|---|
-| First visit | `/` → welcome → Enter → dashboard | `smoke.spec.ts` |
+| Every visit | `/` → welcome → Enter → dashboard; reload stays; new tab starts again; direct links open their page | `smoke.spec.ts`, `welcome.spec.ts` |
 | Learner completes a quest | dashboard next step → module → Mark complete → lab → Explain → quest → answer → "Quest complete" → dashboard shows 1 of 4 quests and the activity | `journeys.spec.ts` |
 | Reflection gate | quest with earlier stages open → reflection locked | `journeys.spec.ts` |
 | Learner hands in results | Settings → invalid code rejected → code saved → Download my results | `journeys.spec.ts` |

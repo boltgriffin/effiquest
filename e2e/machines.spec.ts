@@ -5,9 +5,13 @@ async function setup(page: Page) {
     localStorage.setItem(
       'effiquest-ui',
       JSON.stringify({
-        state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+        state: { theme: 'system', quality: 'auto' },
         version: 0,
       }),
+    );
+    sessionStorage.setItem(
+      'effiquest-session',
+      JSON.stringify({ state: { enteredApp: true }, version: 0 }),
     );
   });
 }
@@ -114,9 +118,13 @@ test.describe('hydraulic press lab', () => {
       localStorage.setItem(
         'effiquest-ui',
         JSON.stringify({
-          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          state: { theme: 'system', quality: 'auto' },
           version: 0,
         }),
+      );
+      sessionStorage.setItem(
+        'effiquest-session',
+        JSON.stringify({ state: { enteredApp: true }, version: 0 }),
       );
     });
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -170,9 +178,13 @@ test.describe('screw jack and wedge labs', () => {
       localStorage.setItem(
         'effiquest-ui',
         JSON.stringify({
-          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          state: { theme: 'system', quality: 'auto' },
           version: 0,
         }),
+      );
+      sessionStorage.setItem(
+        'effiquest-session',
+        JSON.stringify({ state: { enteredApp: true }, version: 0 }),
       );
     });
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -251,9 +263,13 @@ test('the 3D view survives a full run without exhausting WebGL contexts', async 
     localStorage.setItem(
       'effiquest-ui',
       JSON.stringify({
-        state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+        state: { theme: 'system', quality: 'auto' },
         version: 0,
       }),
+    );
+    sessionStorage.setItem(
+      'effiquest-session',
+      JSON.stringify({ state: { enteredApp: true }, version: 0 }),
     );
   });
   await page.goto('/lab/pulley');
@@ -275,9 +291,13 @@ test.describe('compound machines', () => {
       localStorage.setItem(
         'effiquest-ui',
         JSON.stringify({
-          state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+          state: { theme: 'system', quality: 'auto' },
           version: 0,
         }),
+      );
+      sessionStorage.setItem(
+        'effiquest-session',
+        JSON.stringify({ state: { enteredApp: true }, version: 0 }),
       );
     });
     await page.emulateMedia({ reducedMotion: 'reduce' });

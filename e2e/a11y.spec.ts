@@ -29,7 +29,11 @@ async function setup(page: Page, theme: 'light' | 'dark') {
   await page.addInitScript((t) => {
     localStorage.setItem(
       'effiquest-ui',
-      JSON.stringify({ state: { seenWelcome: true, theme: t, quality: 'auto' }, version: 0 }),
+      JSON.stringify({ state: { theme: t, quality: 'auto' }, version: 0 }),
+    );
+    sessionStorage.setItem(
+      'effiquest-session',
+      JSON.stringify({ state: { enteredApp: true }, version: 0 }),
     );
     localStorage.setItem(
       'effiquest-learner',

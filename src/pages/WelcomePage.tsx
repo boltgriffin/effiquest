@@ -4,7 +4,7 @@ import { Icon, type IconName } from '@/components/icons/Icon';
 import { Button } from '@/components/ui/Button';
 import { buttonClass, eyebrowClass } from '@/components/ui/styles';
 import { SimulationShowcase } from '@/features/lab/showcase/SimulationShowcase';
-import { useUiStore } from '@/store/uiStore';
+import { useSessionStore } from '@/store/sessionStore';
 import { cx } from '@/utils/cx';
 import { WelcomeNav } from './welcome/WelcomeNav';
 
@@ -34,14 +34,15 @@ const facts: Array<{ icon: IconName; text: string }> = [
 
 /**
  * First screen (always in the dark theme): navigation, hero, the 3D simulation showcase and how a
- * lab session works. Leaving it marks the welcome as seen, so the dashboard opens next time.
+ * lab session works. Every visit opened at the home address starts here (D-26); leaving it lets
+ * the dashboard open for the rest of the visit.
  */
 export default function WelcomePage() {
   const navigate = useNavigate();
-  const setSeenWelcome = useUiStore((s) => s.setSeenWelcome);
+  const enterApp = useSessionStore((s) => s.enterApp);
 
   const go = (to: string) => {
-    setSeenWelcome(true);
+    enterApp();
     navigate(to, { replace: to === '/' });
   };
 

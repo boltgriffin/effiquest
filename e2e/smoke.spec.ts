@@ -1,14 +1,18 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Skip the first-visit welcome redirect for tests that start inside the app. */
+/** Skip the welcome screen (shown at the start of every visit) for tests that start inside the app. */
 async function asReturningUser(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem(
       'effiquest-ui',
       JSON.stringify({
-        state: { seenWelcome: true, theme: 'system', quality: 'auto' },
+        state: { theme: 'system', quality: 'auto' },
         version: 0,
       }),
+    );
+    sessionStorage.setItem(
+      'effiquest-session',
+      JSON.stringify({ state: { enteredApp: true }, version: 0 }),
     );
   });
 }
