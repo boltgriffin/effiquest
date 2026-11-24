@@ -26,13 +26,20 @@ export function SimControls({
 }: SimControlsProps) {
   const text = state.status === 'paused' ? 'Paused.' : status[state.status];
   return (
-    <div className="flex flex-col gap-2">
-      <div role="toolbar" aria-label="Simulation controls" className="flex flex-wrap gap-2">
+    <div className="@container flex flex-col gap-2">
+      {/* Narrow (phones): Start spans the width, the other three share even columns beneath it.
+          Sized by the panel's own width, so it also holds in the narrow desktop column. */}
+      <div
+        role="toolbar"
+        aria-label="Simulation controls"
+        className="grid grid-cols-2 gap-2 @min-[21rem]:grid-cols-3 @lg:flex @lg:flex-wrap"
+      >
         <Button
           variant="primary"
           icon="play"
           onClick={onStart}
           disabled={state.status === 'running'}
+          className="col-span-full"
         >
           {hasRun ? 'Start new run' : 'Start'}
         </Button>
@@ -51,6 +58,7 @@ export function SimControls({
         <Button
           icon="reset"
           variant="ghost"
+          className="col-span-2 @min-[21rem]:col-span-1"
           onClick={onReset}
           disabled={state.status === 'idle' && !hasRun}
         >

@@ -76,8 +76,9 @@ export function MachineLab<P extends LabParams>({ def }: { def: MachineDefinitio
                   id: '3d',
                   label: '3D view',
                   icon: 'layers',
+                  // Phones: near-square so the machine is not squeezed into a tall, narrow frame.
                   content: isWebGLAvailable() ? (
-                    <div className="h-[min(60vh,28rem)] overflow-hidden rounded-md border border-rule">
+                    <div className="aspect-[5/6] max-h-[60vh] overflow-hidden rounded-md border border-rule sm:aspect-auto sm:h-[min(60vh,28rem)]">
                       <ErrorBoundary area="the 3D view">
                         <Suspense fallback={<LoadingState label="Loading 3D view…" />}>
                           <View3D params={shown} motion={sim.motion} playing={playing} />

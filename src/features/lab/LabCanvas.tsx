@@ -28,6 +28,34 @@ function CameraRig({ view, version }: { view: CameraView; version: number }) {
   return null;
 }
 
+/** Vertical field of view the preset views were framed with, at {@link FRAMED_ASPECT} or wider. */
+const BASE_FOV = 45;
+/** Width / height of the canvas the preset views were framed for (the desktop lab panel). */
+const FRAMED_ASPECT = 1.3;
+/** Widest vertical field of view used on narrow canvases, to keep perspective distortion mild. */
+const MAX_FOV = 70;
+
+/**
+ * Keeps the horizontal field of view at least as wide as the framed one. On a narrow (portrait)
+ * canvas a fixed vertical field of view crops the sides of the machine, so the view widens instead.
+ */
+function FitWidth() {
+  const get = useThree((s) => s.get);
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    const { camera } = get();
+    if (!('fov' in camera) || width <= 0 || height <= 0) return;
+    const aspect = width / height;
+    const half = Math.tan((BASE_FOV * Math.PI) / 360) * Math.max(1, FRAMED_ASPECT / aspect);
+    camera.fov = Math.min(MAX_FOV, (Math.atan(half) * 360) / Math.PI);
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [get, width, height, invalidate]);
+  return null;
+}
+
 interface LabCanvasProps {
   children: ReactNode;
   label?: string;
@@ -76,7 +104,7 @@ export default function LabCanvas({
           frameloop="demand"
           // Standard (PCF) shadow maps: this three.js version removed the soft variant.
           shadows={quality !== 'low' ? 'percentage' : false}
-          camera={{ position: views[0]?.position ?? [3, 2.5, 4], fov: 45 }}
+          camera={{ position: views[0]?.position ?? [3, 2.5, 4], fov: BASE_FOV }}
           aria-label={label}
           onCreated={({ gl }) => {
             const el = gl.domElement;
@@ -89,6 +117,7 @@ export default function LabCanvas({
           }}
         >
           {children}
+          <FitWidth />
           {view ? <CameraRig view={view} version={version} /> : null}
         </Canvas>
       </div>
@@ -117,7 +146,7 @@ export default function LabCanvas({
             {v.label}
           </button>
         ))}
-        <span className="ml-auto hidden px-1 text-xs text-muted sm:inline">
+        <span className="w-full px-1 text-xs text-muted sm:ml-auto sm:w-auto">
           Drag to turn · pinch or scroll to zoom
         </span>
       </div>
