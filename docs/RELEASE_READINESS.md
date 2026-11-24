@@ -121,6 +121,8 @@ Do this on **one low-end Android phone** and **one school PC**:
 
 **Redeployed (2026-11-24):** D-26 (commit `97b2460`): the welcome screen opens at the start of every visit. Checked on the live site with a returning learner (old "welcome seen" flag stored): opening `/` shows the welcome; after Enter the dashboard opens; a reload stays on the dashboard; a new tab starts on the welcome again; a direct link (`/lab/wedge`) opens its page.
 
+**Redeployed (2026-11-24):** D-27 (commit `820b44b`): teacher-chosen YouTube videos in each module's Video tab. Checked on the live site: `/learn/torque` returns 200 and the precached assets include the player (`youtube-nocookie.com/embed`). **Still to check by hand:** each of the five videos plays inside the app (an uploader may have turned off embedding) and the offline message shows with the network off.
+
 **To publish a new version:** commit, then run `npx vercel deploy --prod` (or connect a GitHub repository for automatic deploys).
 
 `vercel.json` sets:
